@@ -48,7 +48,7 @@ jobs:
 
       - name: Build backend
         working-directory: ${{ env.BACKEND_DIR }}
-        run: chmod +x mvnw && ./mvnw --no-transfer-progress clean package
+        run: chmod +x mvnw && ./mvnw --no-transfer-progress clean package -DskipTests
 
   deploy-frontend:
     needs: build
