@@ -63,7 +63,12 @@ jobs:
 
       - name: Deploy frontend to Vercel
         working-directory: ${{ env.FRONTEND_DIR }}
-        run: npx vercel@latest deploy --prod --yes
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::error::Falta el secret VERCEL_TOKEN en GitHub (Settings → Secrets → Actions)."
+            exit 1
+          fi
+          npx vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN"
 
   deploy-backend:
     needs: build
