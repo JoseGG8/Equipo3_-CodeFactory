@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { autenticarUsuario, obtenerIntentosRestantes, bloquearUsuario } from '../data/usuarios';
+import { loginUsuario } from '../services/api';
 
 interface FormularioLoginProps {
   onLoginExitoso: (usuario: { id: string; nombre: string; correo: string }) => void;
@@ -19,6 +19,7 @@ export function FormularioLogin({ onLoginExitoso, onVolverAtras }: FormularioLog
   const [intentosFallidos, setIntentosFallidos] = useState(0);
   const [estaBloqueado, setEstaBloqueado] = useState(false);
   const [tiempoRestante, setTiempoRestante] = useState(0);
+  const [enviando, setEnviando] = useState(false);
 
   // Verificar estado de bloqueo al cargar
   useEffect(() => {
@@ -72,10 +73,9 @@ export function FormularioLogin({ onLoginExitoso, onVolverAtras }: FormularioLog
     return `${minutos}:${segs.toString().padStart(2, '0')}`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Verificar si está bloqueado
     if (estaBloqueado) {
       toast.error('Cuenta bloqueada', {
         description: `Por seguridad, espera ${formatearTiempo(tiempoRestante)} para intentar nuevamente.`
@@ -83,7 +83,6 @@ export function FormularioLogin({ onLoginExitoso, onVolverAtras }: FormularioLog
       return;
     }
 
-    // Validar campos vacíos
     if (!correo.trim() || !contraseña.trim()) {
       toast.error('Error de validación', {
         description: 'Por favor, completa todos los campos'
@@ -91,34 +90,29 @@ export function FormularioLogin({ onLoginExitoso, onVolverAtras }: FormularioLog
       return;
     }
 
-    // Intentar autenticar
-    const resultado = autenticarUsuario(correo.trim().toLowerCase(), contraseña);
+    setEnviando(true);
+    try {
+      const u = await loginUsuario(correo.trim().toLowerCase(), contraseña);
 
-    if (resultado.exito && resultado.usuario) {
-      // Login exitoso
       toast.success('¡Bienvenido!', {
-        description: `Has iniciado sesión correctamente, ${resultado.usuario.nombre}`
+        description: `Has iniciado sesión correctamente, ${u.nombre}`
       });
 
-      // Limpiar intentos fallidos
       localStorage.removeItem(CLAVE_INTENTOS);
       localStorage.removeItem(CLAVE_TIEMPO_BLOQUEO);
       setIntentosFallidos(0);
 
-      // Callback
       onLoginExitoso({
-        id: resultado.usuario.id,
-        nombre: resultado.usuario.nombre,
-        correo: resultado.usuario.correo
+        id: String(u.id),
+        nombre: u.nombre,
+        correo: u.email
       });
-    } else {
-      // Login fallido
+    } catch {
       const nuevosIntentos = intentosFallidos + 1;
       setIntentosFallidos(nuevosIntentos);
       localStorage.setItem(CLAVE_INTENTOS, nuevosIntentos.toString());
 
       if (nuevosIntentos >= 5) {
-        // Bloquear cuenta
         setEstaBloqueado(true);
         setTiempoRestante(TIEMPO_BLOQUEO / 1000);
         localStorage.setItem(CLAVE_TIEMPO_BLOQUEO, Date.now().toString());
@@ -130,9 +124,11 @@ export function FormularioLogin({ onLoginExitoso, onVolverAtras }: FormularioLog
       } else {
         const intentosRestantes = 5 - nuevosIntentos;
         toast.error('Credenciales incorrectas', {
-          description: resultado.mensaje || `Correo o contraseña incorrectos. Te quedan ${intentosRestantes} intento${intentosRestantes === 1 ? '' : 's'}.`
+          description: `Correo o contraseña incorrectos. Te quedan ${intentosRestantes} intento${intentosRestantes === 1 ? '' : 's'}.`
         });
       }
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -239,22 +235,17 @@ export function FormularioLogin({ onLoginExitoso, onVolverAtras }: FormularioLog
         {/* Botón */}
         <button
           type="submit"
-          disabled={estaBloqueado}
+          disabled={estaBloqueado || enviando}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-2 mt-6 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           <LogIn className="w-5 h-5" />
-          {estaBloqueado ? 'Cuenta bloqueada' : 'Iniciar Sesión'}
+          {estaBloqueado ? 'Cuenta bloqueada' : enviando ? 'Entrando…' : 'Iniciar Sesión'}
         </button>
       </form>
 
-      {/* Usuario de prueba */}
-      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-        <p className="text-xs font-medium text-blue-800 mb-1">Usuario de prueba</p>
-        <p className="text-xs text-blue-700">
-          <strong>Correo:</strong> demo@ejemplo.com<br />
-          <strong>Contraseña:</strong> Demo123!
-        </p>
-      </div>
+      <p className="mt-6 text-xs text-center text-gray-500">
+        El acceso se valida contra el servidor desplegado. Si aún no tienes cuenta, regístrate primero.
+      </p>
     </div>
   );
 }

@@ -1,0 +1,4 @@
+# Raíz del monorepo: basura de sistema y logs sueltos
+.DS_Store
+Thumbs.db
+*.log

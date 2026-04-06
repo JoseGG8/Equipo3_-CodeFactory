@@ -1,0 +1,75 @@
+# CI/CD: valida frontend (Vite) y backend (Spring/Maven) en push a main;
+# despliega frontend en Vercel y dispara deploy en Render vía hook.
+
+name: CI/CD Fullstack
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FRONTEND_DIR: GestionFinanzas-Frontend
+  BACKEND_DIR: GestionFinanzas-Backend
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install frontend dependencies
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm install
+
+      - name: Build frontend
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run build
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: ${{ env.BACKEND_DIR }}/pom.xml
+
+      - name: Build backend
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: chmod +x mvnw && ./mvnw --no-transfer-progress clean package
+
+  deploy-frontend:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy frontend to Vercel
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npx vercel@latest deploy --prod --yes
+
+  deploy-backend:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+    steps:
+      - name: Trigger Render deploy
+        run: curl -fsSL -X POST "$RENDER_DEPLOY_HOOK"

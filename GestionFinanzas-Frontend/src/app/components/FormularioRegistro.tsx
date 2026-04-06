@@ -1,16 +1,11 @@
 import { useState } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, CheckCircle, XCircle, UserPlus, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  correoYaRegistrado,
-  registrarUsuario,
-  validarContraseña,
-  validarCorreo,
-  REGLAS_CONTRASEÑA
-} from '../data/usuarios';
+import { validarContraseña, validarCorreo, REGLAS_CONTRASEÑA } from '../data/usuarios';
+import { registrarUsuarioApi } from '../services/api';
 
 interface FormularioRegistroProps {
-  onRegistroExitoso: (usuario: { nombre: string; correo: string }) => void;
+  onRegistroExitoso: (usuario: { id: string; nombre: string; correo: string }) => void;
   onVolverAtras: () => void;
 }
 
@@ -21,6 +16,7 @@ export function FormularioRegistro({ onRegistroExitoso, onVolverAtras }: Formula
   const [confirmarContraseña, setConfirmarContraseña] = useState('');
   const [mostrarContraseña, setMostrarContraseña] = useState(false);
   const [mostrarConfirmarContraseña, setMostrarConfirmarContraseña] = useState(false);
+  const [enviando, setEnviando] = useState(false);
 
   // Estados para validación en tiempo real
   const [correoTocado, setCorreoTocado] = useState(false);
@@ -33,7 +29,7 @@ export function FormularioRegistro({ onRegistroExitoso, onVolverAtras }: Formula
   // Validación de correo
   const correoValido = validarCorreo(correo);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validación: campos obligatorios
@@ -59,14 +55,6 @@ export function FormularioRegistro({ onRegistroExitoso, onVolverAtras }: Formula
       return;
     }
 
-    // Validación: correo no registrado previamente
-    if (correoYaRegistrado(correo)) {
-      toast.error('Correo ya registrado', {
-        description: 'Este correo electrónico ya está en uso. Por favor, utiliza otro.'
-      });
-      return;
-    }
-
     // Validación: contraseña
     if (!contraseñaValida) {
       toast.error('Contraseña inválida', {
@@ -83,31 +71,36 @@ export function FormularioRegistro({ onRegistroExitoso, onVolverAtras }: Formula
       return;
     }
 
-    // Registrar el usuario
-    const nuevoUsuario = registrarUsuario({
-      nombre: nombre.trim(),
-      correo: correo.trim().toLowerCase(),
-      contraseña
-    });
+    setEnviando(true);
+    try {
+      const nuevoUsuario = await registrarUsuarioApi({
+        nombre: nombre.trim(),
+        email: correo.trim().toLowerCase(),
+        password: contraseña
+      });
 
-    // Notificar éxito
-    toast.success('¡Registro exitoso!', {
-      description: `Bienvenido ${nuevoUsuario.nombre}. Tu cuenta ha sido creada.`
-    });
+      toast.success('¡Registro exitoso!', {
+        description: `Bienvenido ${nuevoUsuario.nombre}. Tu cuenta ha sido creada.`
+      });
 
-    // Callback al componente padre
-    onRegistroExitoso({
-      nombre: nuevoUsuario.nombre,
-      correo: nuevoUsuario.correo
-    });
+      onRegistroExitoso({
+        id: String(nuevoUsuario.id),
+        nombre: nuevoUsuario.nombre,
+        correo: nuevoUsuario.email
+      });
 
-    // Limpiar formulario
-    setNombre('');
-    setCorreo('');
-    setContraseña('');
-    setConfirmarContraseña('');
-    setCorreoTocado(false);
-    setContraseñaTocada(false);
+      setNombre('');
+      setCorreo('');
+      setContraseña('');
+      setConfirmarContraseña('');
+      setCorreoTocado(false);
+      setContraseñaTocada(false);
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : 'Error al registrar';
+      toast.error('No se pudo registrar', { description: mensaje });
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -312,10 +305,11 @@ export function FormularioRegistro({ onRegistroExitoso, onVolverAtras }: Formula
         {/* Botón */}
         <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-2 mt-6"
+          disabled={enviando}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-2 mt-6 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           <UserPlus className="w-5 h-5" />
-          Crear Cuenta
+          {enviando ? 'Creando cuenta…' : 'Crear Cuenta'}
         </button>
       </form>
 

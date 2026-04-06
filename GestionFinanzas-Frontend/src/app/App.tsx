@@ -7,6 +7,7 @@ import { FormularioIngreso } from './components/FormularioIngreso';
 import { FormularioCategoria } from './components/FormularioCategoria';
 import { Toaster, toast } from 'sonner';
 import { Plus, Layers } from 'lucide-react';
+import { crearCategoriaApi } from './services/api';
 
 type Vista = 'inicial' | 'registro' | 'login';
 type VistaApp = 'ingresos' | 'categoria';
@@ -15,35 +16,25 @@ function AppContent() {
   const { usuario, iniciarSesion, estaAutenticado } = useAuth();
   const [vista, setVista] = useState<Vista>('inicial');
   const [vistaApp, setVistaApp] = useState<VistaApp>('ingresos');
+  const [catsVersion, setCatsVersion] = useState(0);
 
-  const agregarIngreso = (nuevoIngreso: {
-    monto: number;
-    fecha: string;
-    categoria: string;
-    descripcion: string;
-  }) => {
-    // Aquí se procesará el ingreso cuando se integre con Spring Boot
-    console.log('Ingreso registrado:', nuevoIngreso);
-    toast.success('Ingreso registrado', {
-      description: `Se ha registrado un ingreso de $${nuevoIngreso.monto}`
-    });
+  const agregarCategoria = async (nuevaCategoria: { nombre: string; tipo: string }) => {
+    try {
+      await crearCategoriaApi(nuevaCategoria);
+      toast.success('Categoría creada', {
+        description: `«${nuevaCategoria.nombre}» (${nuevaCategoria.tipo})`
+      });
+      setCatsVersion((v) => v + 1);
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : 'Error al crear la categoría';
+      toast.error('No se pudo crear la categoría', { description: mensaje });
+      throw err;
+    }
   };
 
-  const agregarCategoria = (nuevaCategoria: {
-    nombre: string;
-    tipo: string;
-  }) => {
-    // Aquí se procesará la categoría cuando se integre con Spring Boot
-    console.log('Categoría creada:', nuevaCategoria);
-    toast.success('Categoría creada', {
-      description: `Se ha creado la categoría "${nuevaCategoria.nombre}" de tipo ${nuevaCategoria.tipo}`
-    });
-  };
-
-  const handleRegistroExitoso = (usuarioNuevo: { nombre: string; correo: string }) => {
-    // Automáticamente iniciar sesión después del registro
+  const handleRegistroExitoso = (usuarioNuevo: { id: string; nombre: string; correo: string }) => {
     iniciarSesion({
-      id: Date.now().toString(),
+      id: usuarioNuevo.id,
       nombre: usuarioNuevo.nombre,
       correo: usuarioNuevo.correo,
       contraseña: '',
@@ -131,8 +122,8 @@ function AppContent() {
 
           {/* Formulario activo */}
           <div className="max-w-2xl mx-auto">
-            {vistaApp === 'ingresos' && (
-              <FormularioIngreso onAgregarIngreso={agregarIngreso} />
+            {vistaApp === 'ingresos' && usuario && (
+              <FormularioIngreso key={catsVersion} userId={usuario.id} />
             )}
             {vistaApp === 'categoria' && (
               <FormularioCategoria onAgregarCategoria={agregarCategoria} />
