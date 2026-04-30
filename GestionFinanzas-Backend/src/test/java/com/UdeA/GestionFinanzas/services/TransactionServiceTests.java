@@ -2,6 +2,7 @@ package com.UdeA.GestionFinanzas.services;
 
 import com.UdeA.GestionFinanzas.entities.Category;
 import com.UdeA.GestionFinanzas.entities.Transaction;
+import com.UdeA.GestionFinanzas.entities.TransactionType;
 import com.UdeA.GestionFinanzas.entities.User;
 import com.UdeA.GestionFinanzas.repositories.CategoryRepository;
 import com.UdeA.GestionFinanzas.repositories.TransactionRepository;
@@ -14,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @SpringBootTest
@@ -61,7 +63,7 @@ public class TransactionServiceTests {
 
     @Test
     void registrarIngreso_valido_guardaTransaccionYActualizaBalance() throws Exception {
-        Transaction t = transactionService.registrarIngreso(user.getId(), ingresoCategory.getId(), 1000.0, LocalDate.now(), "Sueldo mensual");
+        Transaction t = transactionService.registrarTransaccion(user.getId(), ingresoCategory.getId(), 1000.0, LocalDateTime.now(), "Sueldo mensual",TransactionType.INGRESO);
 
         Assertions.assertNotNull(t.getId());
         Assertions.assertEquals("INGRESO", t.getTipo());
@@ -69,9 +71,9 @@ public class TransactionServiceTests {
         Assertions.assertEquals(user.getId(), t.getUsuario().getId());
         Assertions.assertEquals(ingresoCategory.getId(), t.getCategoria().getId());
 
-        List<Transaction> transacciones = transactionService.listarTransaccionesPorUsuario(user.getId());
+        List<Transaction> transacciones = transactionService.consultarHistoricoFiltrado(user.getId(),null , LocalDateTime.now().minusWeeks(1), LocalDateTime.now());
         Assertions.assertFalse(transacciones.isEmpty());
-        Assertions.assertEquals(1000.0, transactionService.calcularBalanceUsuario(user.getId()));
+        Assertions.assertEquals(1000.0, transactionService.calcularBalanceUsuario(user.getId() , LocalDateTime.now().minusWeeks(1), LocalDateTime.now()));
     }
 
     @Test
