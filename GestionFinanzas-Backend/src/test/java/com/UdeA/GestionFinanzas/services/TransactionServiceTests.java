@@ -1,23 +1,21 @@
 package com.UdeA.GestionFinanzas.services;
 
-import com.UdeA.GestionFinanzas.entities.Category;
-import com.UdeA.GestionFinanzas.entities.Transaction;
-import com.UdeA.GestionFinanzas.entities.TransactionType;
-import com.UdeA.GestionFinanzas.entities.User;
-import com.UdeA.GestionFinanzas.repositories.CategoryRepository;
-import com.UdeA.GestionFinanzas.repositories.TransactionRepository;
-import com.UdeA.GestionFinanzas.repositories.UserRepository;
+
+import com.UdeA.GestionFinanzas.entities.*;
+import com.UdeA.GestionFinanzas.repositories.*;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.ActiveProfiles;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@ActiveProfiles("test")
 @SpringBootTest
 @Transactional
 public class TransactionServiceTests {
@@ -70,16 +68,17 @@ public class TransactionServiceTests {
         Assertions.assertEquals(1000.0, t.getMonto());
         Assertions.assertEquals(user.getId(), t.getUsuario().getId());
         Assertions.assertEquals(ingresoCategory.getId(), t.getCategoria().getId());
+        
 
         List<Transaction> transacciones = transactionService.consultarHistoricoFiltrado(user.getId(),null , LocalDateTime.now().minusWeeks(1), LocalDateTime.now());
         Assertions.assertFalse(transacciones.isEmpty());
-        Assertions.assertEquals(1000.0, transactionService.calcularBalanceUsuario(user.getId() , LocalDateTime.now().minusWeeks(1), LocalDateTime.now()));
+        Assertions.assertEquals(1000.0, transactionService.calcularBalanceTotalPeriodo(user.getId() , LocalDateTime.now().minusWeeks(1), LocalDateTime.now()));
     }
 
     @Test
     void registrarIngreso_montoCero_lanzaIllegalArgumentException() {
         IllegalArgumentException ex = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            transactionService.registrarIngreso(user.getId(), ingresoCategory.getId(), 0.0, LocalDate.now(), "Cero");
+            transactionService.registrarTransaccion(user.getId(), ingresoCategory.getId(), 0.0, LocalDateTime.now(), "Cero",TransactionType.INGRESO);
         });
         Assertions.assertTrue(ex.getMessage().contains("mayor a cero"));
     }
@@ -87,7 +86,7 @@ public class TransactionServiceTests {
     @Test
     void registrarIngreso_categoriaNoIngreso_lanzaIllegalArgumentException() {
         IllegalArgumentException ex = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            transactionService.registrarIngreso(user.getId(), gastoCategory.getId(), 100.0, LocalDate.now(), "No ingreso");
+            transactionService.registrarTransaccion(user.getId(), gastoCategory.getId(), 100.0, LocalDateTime.now(), "No ingreso", TransactionType.GASTO);
         });
         Assertions.assertTrue(ex.getMessage().contains("categoría no corresponde a un ingreso"));
     }
