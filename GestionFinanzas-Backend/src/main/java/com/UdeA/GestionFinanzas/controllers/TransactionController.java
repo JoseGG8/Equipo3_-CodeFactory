@@ -29,27 +29,18 @@ public class TransactionController {
     }
 
 @PostMapping("/register")
-    public ResponseEntity<?> registrar(@RequestBody Transaction request) {
-        try {
-            // Extraemos los IDs de los objetos anidados que envía el Front
-            Transaction nuevaTransaccion = transactionService.registrarTransaccion(
-                request.getUsuario().getId(),
-                request.getCategoria().getId(),
-                request.getMonto(),
-                request.getFecha(),
-                request.getDescripcion(),
-                request.getTipo()
-            );
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuevaTransaccion);
-        } catch (IllegalArgumentException e) {
-            // Captura errores de validación (monto <= 0, categorías incompatibles, etc.)
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            // Captura errores inesperados (usuario no encontrado, error de BD)
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                 .body("Error al procesar el registro: " + e.getMessage());
-        }
+public ResponseEntity<?> registrar(@RequestBody Transaction transaction) {
+    try {
+        // Ahora pasamos el objeto completo al servicio
+        Transaction nueva = transactionService.registrarTransaccion(transaction);
+        return ResponseEntity.status(HttpStatus.CREATED).body(nueva);
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                             .body("Error al procesar el registro: " + e.getMessage());
     }
+}
 
 
 @GetMapping("/user/{userId}/balance")
@@ -72,10 +63,20 @@ public ResponseEntity<?> obtenerBalanceUsuario(
 @GetMapping("/{userId}/transactions/history")
     public ResponseEntity<List<Transaction>> getHistorico(
             @PathVariable Long userId, // El ID viene de la URL
-            @RequestParam TransactionType tipo,
+            @RequestParam(required = false) TransactionType tipo,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin) {
         
         return ResponseEntity.ok(transactionService.consultarHistoricoFiltrado(userId, tipo, inicio, fin));
     }
+
+@GetMapping("/{userId}/transactions/ahorro")
+    public ResponseEntity<?> getTasaAhorro(
+            @PathVariable Long userId, // El ID viene de la URL
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin) {
+        
+        return ResponseEntity.ok(transactionService.calcularTasaAhorro(userId, inicio, fin));
+    }
+
 }
