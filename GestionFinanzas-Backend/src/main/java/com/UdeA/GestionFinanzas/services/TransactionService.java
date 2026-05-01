@@ -19,36 +19,37 @@ public class TransactionService {
     @Autowired
     private CategoryRepository categoryRepository;
 
-public Transaction registrarTransaccion(Long userId, Long categoryId, Double monto, 
-                                       LocalDateTime fecha, String descripcion, 
-                                       TransactionType tipo) throws Exception {
+public Transaction registrarTransaccion(Transaction transaccion) throws Exception {
     
-    // 1. Validaciones Comunes
-    if (monto == null || monto <= 0) {
-        throw new IllegalArgumentException("El monto debe ser mayor a cero");
+    // 1. Validaciones básicas de datos
+    if (transaccion.getMonto() == null || transaccion.getMonto() <= 0) {
+        throw new IllegalArgumentException("El monto debe ser mayor a cero 💰");
     }
 
-    User usuario = userRepository.findById(userId)
-            .orElseThrow(() -> new Exception("Usuario no encontrado"));
-
-    Category categoria = categoryRepository.findById(categoryId)
-            .orElseThrow(() -> new Exception("Categoría no encontrada"));
-
-    // 2. Validación de Negocio Cruzada
-    // Verificamos que si el tipo es INGRESO, la categoría también lo sea
-    if (!tipo.name().equalsIgnoreCase(categoria.getTipo())) {
-        throw new IllegalArgumentException("La categoría no coincide con el tipo de transacción");
+    if (transaccion.getFecha() == null) {
+        transaccion.setFecha(LocalDateTime.now()); // Backup por si el front no la envía
     }
 
-    // 3. Creación y Persistencia
-    Transaction transaccion = new Transaction();
+    // 2. Validar y cargar Entidades Relacionadas (Usuario y Categoría)
+    // Extraemos los IDs que vienen dentro del objeto transaccion
+    User usuario = userRepository.findById(transaccion.getUsuario().getId())
+            .orElseThrow(() -> new Exception("Usuario no encontrado 👤"));
+
+    Category categoria = categoryRepository.findById(transaccion.getCategoria().getId())
+            .orElseThrow(() -> new Exception("Categoría no encontrada 📂"));
+
+    // 3. Validación de Negocio Cruzada
+    // Verificamos que el tipo de la transacción coincida con el tipo de la categoría
+    if (!transaccion.getTipo().name().equalsIgnoreCase(categoria.getTipo())) {
+        throw new IllegalArgumentException("La categoría '" + categoria.getNombre() + 
+            "' no es válida para una transacción de tipo " + transaccion.getTipo());
+    }
+
+    // 4. Vincular los objetos completos antes de guardar
     transaccion.setUsuario(usuario);
     transaccion.setCategoria(categoria);
-    transaccion.setMonto(monto);
-    transaccion.setFecha(fecha != null ? fecha : LocalDateTime.now());
-    transaccion.setDescripcion(descripcion);
-    transaccion.setTipo(tipo); // Aquí se asigna INGRESO o GASTO dinámicamente
 
+    // 5. Persistencia
     return transactionRepository.save(transaccion);
 }
 
@@ -62,7 +63,7 @@ if (inicio.isAfter(fin)) {
         // Si no mandan tipo, traemos todo el histórico
         return transactionRepository.findByUsuarioIdAndFechaBetween(userId, inicio, fin);
     } else {
-        // Si mandan tipo, filtramos (lo que tienes ahora)
+        // Si mandan tipo, filtramos 
         return transactionRepository.findByUsuarioIdAndTipoAndFechaBetween(userId, tipo, inicio, fin);
     }
 }
@@ -81,6 +82,15 @@ public Double calcularBalanceTotalPeriodo(Long userId, LocalDateTime inicio, Loc
 
     // 4. Retornamos el resultado de la lógica de negocio
     return totalIngresos - totalGastos;
+}
+public Double calcularTasaAhorro(Long userId, LocalDateTime inicio, LocalDateTime fin) {
+
+    List<Transaction> ingresos = consultarHistoricoFiltrado(userId, TransactionType.INGRESO, inicio, fin);
+    Double totalIngresos = ingresos.stream().mapToDouble(Transaction::getMonto).sum();
+    Double balance = calcularBalanceTotalPeriodo(userId, inicio, fin);
+    Double tasaAhorro = (balance/totalIngresos)*100;
+
+    return tasaAhorro;
 }
 
 }
