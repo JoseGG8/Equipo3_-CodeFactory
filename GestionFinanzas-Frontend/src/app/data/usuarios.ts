@@ -7,19 +7,28 @@ export interface Usuario {
   fechaRegistro: string;
 }
 
-// Simulación de base de datos de usuarios
-let usuariosRegistrados: Usuario[] = [
-  {
-    id: '1',
-    nombre: 'Usuario Demo',
-    correo: 'demo@ejemplo.com',
-    contraseña: 'Demo123!',
-    fechaRegistro: '2026-01-15'
+const CLAVE_USUARIOS = 'app_usuarios_registrados';
+
+// Cargar usuarios desde localStorage (sin cuenta demo)
+function cargarUsuarios(): Usuario[] {
+  try {
+    const guardados = localStorage.getItem(CLAVE_USUARIOS);
+    return guardados ? JSON.parse(guardados) : [];
+  } catch {
+    return [];
   }
-];
+}
+
+function guardarUsuarios(lista: Usuario[]): void {
+  localStorage.setItem(CLAVE_USUARIOS, JSON.stringify(lista));
+}
+
+// Simulación de base de datos de usuarios (sin demo)
+let usuariosRegistrados: Usuario[] = cargarUsuarios();
 
 // Función para verificar si el correo ya está registrado
 export function correoYaRegistrado(correo: string): boolean {
+  usuariosRegistrados = cargarUsuarios();
   return usuariosRegistrados.some(
     usuario => usuario.correo.toLowerCase() === correo.toLowerCase()
   );
@@ -27,6 +36,7 @@ export function correoYaRegistrado(correo: string): boolean {
 
 // Función para registrar un nuevo usuario
 export function registrarUsuario(usuario: Omit<Usuario, 'id' | 'fechaRegistro'>): Usuario {
+  usuariosRegistrados = cargarUsuarios();
   const nuevoUsuario: Usuario = {
     ...usuario,
     id: Date.now().toString(),
@@ -34,12 +44,13 @@ export function registrarUsuario(usuario: Omit<Usuario, 'id' | 'fechaRegistro'>)
   };
 
   usuariosRegistrados.push(nuevoUsuario);
+  guardarUsuarios(usuariosRegistrados);
   return nuevoUsuario;
 }
 
 // Función para obtener todos los usuarios (para desarrollo/debug)
 export function obtenerUsuarios(): Usuario[] {
-  return [...usuariosRegistrados];
+  return [...cargarUsuarios()];
 }
 
 // Reglas de seguridad para contraseñas
@@ -104,7 +115,8 @@ export interface ResultadoAutenticacion {
 
 // Función para autenticar usuario
 export function autenticarUsuario(correo: string, contraseña: string): ResultadoAutenticacion {
-  const usuario = usuariosRegistrados.find(
+  const lista = cargarUsuarios();
+  const usuario = lista.find(
     u => u.correo.toLowerCase() === correo.toLowerCase()
   );
 
@@ -136,12 +148,10 @@ export function autenticarUsuario(correo: string, contraseña: string): Resultad
 
 // Función para obtener intentos restantes (para uso futuro)
 export function obtenerIntentosRestantes(correo: string): number {
-  // Esta función se puede expandir en el futuro
   return 5;
 }
 
 // Función para bloquear usuario (placeholder para expansión futura)
 export function bloquearUsuario(correo: string): void {
-  // Esta función se puede expandir en el futuro
   console.log(`Usuario ${correo} bloqueado temporalmente`);
 }
