@@ -4,8 +4,8 @@ import { toast } from 'sonner';
 import { useApp } from '../context/AppContext';
 import { formatearMoneda } from '../utils/formato';
 
-export function FormularioIngreso() {
-  const { categoriasIngreso, agregarIngreso, balanceTotal } = useApp();
+export function FormularioGasto() {
+  const { categoriasGasto, agregarGasto, balanceTotal } = useApp();
 
   const [monto, setMonto] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
@@ -31,20 +31,20 @@ export function FormularioIngreso() {
       return;
     }
 
-    const categoriaSeleccionada = categoriasIngreso.find((c) => c.id === categoriaId);
+    const categoriaSeleccionada = categoriasGasto.find((c) => c.id === categoriaId);
 
     // TODO: Reemplazar con llamada REST a Spring Boot
-    agregarIngreso({
+    agregarGasto({
       monto: montoNumerico,
       fecha,
       categoriaId,
       categoriaNombre: categoriaSeleccionada?.nombre ?? categoriaId,
       descripcion,
-      tipo: 'ingreso',
+      tipo: 'gasto',
     });
 
-    toast.success('Ingreso registrado', {
-      description: `Se registró un ingreso de ${formatearMoneda(montoNumerico)} en "${categoriaSeleccionada?.nombre}"`,
+    toast.success('Gasto registrado', {
+      description: `Se registró un gasto de ${formatearMoneda(montoNumerico)} en "${categoriaSeleccionada?.nombre}"`,
     });
 
     setMonto('');
@@ -57,7 +57,7 @@ export function FormularioIngreso() {
     <div className="max-w-xl mx-auto space-y-4">
       {/* Balance actual */}
       <div className="bg-white border border-gray-200 rounded-xl p-4">
-        <p className="text-xs text-gray-500 mb-0.5">Balance General</p>
+        <p className="text-xs text-gray-500 mb-0.5">Balance Actual</p>
         <p className={`text-2xl font-bold ${balanceTotal >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
           {formatearMoneda(balanceTotal)}
         </p>
@@ -65,7 +65,7 @@ export function FormularioIngreso() {
 
       {/* Formulario */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold mb-5 text-gray-800">Registrar Nuevo Ingreso</h2>
+        <h2 className="text-lg font-semibold mb-5 text-gray-800">Registrar Nuevo Gasto</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Monto */}
@@ -82,7 +82,7 @@ export function FormularioIngreso() {
               min="0"
               value={monto}
               onChange={(e) => setMonto(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors"
               placeholder="0.00"
             />
           </div>
@@ -99,7 +99,7 @@ export function FormularioIngreso() {
               type="date"
               value={fecha}
               onChange={(e) => setFecha(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors"
             />
           </div>
 
@@ -114,15 +114,15 @@ export function FormularioIngreso() {
             <select
               value={categoriaId}
               onChange={(e) => setCategoriaId(e.target.value)}
-              disabled={categoriasIngreso.length === 0}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
+              disabled={categoriasGasto.length === 0}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
               <option value="">
-                {categoriasIngreso.length === 0
+                {categoriasGasto.length === 0
                   ? 'No hay categorías disponibles. Primero crea una categoría.'
                   : 'Selecciona una categoría'}
               </option>
-              {categoriasIngreso.map((cat) => (
+              {categoriasGasto.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.nombre}
                 </option>
@@ -132,16 +132,16 @@ export function FormularioIngreso() {
 
           {/* Descripción */}
           <div>
-            <label className="block text-sm font-medium text-blue-600 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
               <div className="flex items-center gap-1.5">
-                <FileText className="w-4 h-4" />
+                <FileText className="w-4 h-4 text-gray-400" />
                 Descripción (opcional)
               </div>
             </label>
             <textarea
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none transition-colors"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none transition-colors"
               rows={3}
               placeholder="Agrega una descripción..."
             />
@@ -150,10 +150,10 @@ export function FormularioIngreso() {
           {/* Botón */}
           <button
             type="submit"
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <Plus className="w-5 h-5" />
-            Registrar Ingreso
+            Registrar Gasto
           </button>
         </form>
       </div>
