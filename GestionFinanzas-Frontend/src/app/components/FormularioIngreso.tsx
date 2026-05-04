@@ -3,8 +3,9 @@ import { DollarSign, Calendar, Tag, FileText, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '../context/AppContext';
 import { formatearMoneda } from '../utils/formato';
+import { registrarIngresoApi } from '../services/api';
 
-export function FormularioIngreso() {
+export function FormularioIngreso({ userId }: { userId: string }) {
   const { categoriasIngreso, agregarIngreso, balanceTotal } = useApp();
 
   const [monto, setMonto] = useState('');
@@ -12,7 +13,7 @@ export function FormularioIngreso() {
   const [categoriaId, setCategoriaId] = useState('');
   const [descripcion, setDescripcion] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const montoNumerico = parseFloat(monto);
@@ -33,15 +34,29 @@ export function FormularioIngreso() {
 
     const categoriaSeleccionada = categoriasIngreso.find((c) => c.id === categoriaId);
 
-    // TODO: Reemplazar con llamada REST a Spring Boot
-    agregarIngreso({
-      monto: montoNumerico,
-      fecha,
-      categoriaId,
-      categoriaNombre: categoriaSeleccionada?.nombre ?? categoriaId,
-      descripcion,
-      tipo: 'ingreso',
-    });
+    try {
+      await registrarIngresoApi({
+        userId: Number(userId),
+        categoryId: Number(categoriaId),
+        monto: montoNumerico,
+        fecha,
+        descripcion,
+      });
+
+      // Mantener estado local para que el UI refleje el cambio sin recargar
+      agregarIngreso({
+        monto: montoNumerico,
+        fecha,
+        categoriaId,
+        categoriaNombre: categoriaSeleccionada?.nombre ?? categoriaId,
+        descripcion,
+        tipo: 'ingreso',
+      });
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : 'No se pudo registrar el ingreso';
+      toast.error('Error al registrar', { description: mensaje });
+      return;
+    }
 
     toast.success('Ingreso registrado', {
       description: `Se registró un ingreso de ${formatearMoneda(montoNumerico)} en "${categoriaSeleccionada?.nombre}"`,

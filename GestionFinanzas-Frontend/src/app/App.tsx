@@ -1,21 +1,26 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { AppProvider } from './context/AppContext';
 import { PantallaInicial } from './components/PantallaInicial';
 import { FormularioRegistro } from './components/FormularioRegistro';
 import { FormularioLogin } from './components/FormularioLogin';
 import { FormularioIngreso } from './components/FormularioIngreso';
+import { FormularioGasto } from './components/FormularioGasto';
 import { FormularioCategoria } from './components/FormularioCategoria';
+import { Dashboard } from './components/Dashboard';
+import { HistorialIngresos } from './components/HistorialIngresos';
+import { GestionCategorias } from './components/GestionCategorias';
+import { BarraLateral } from './components/BarraLateral';
 import { Toaster, toast } from 'sonner';
-import { Plus, Layers } from 'lucide-react';
 import { crearCategoriaApi } from './services/api';
+import { VistaApp } from './types';
 
 type Vista = 'inicial' | 'registro' | 'login';
-type VistaApp = 'ingresos' | 'categoria';
 
 function AppContent() {
-  const { usuario, iniciarSesion, estaAutenticado } = useAuth();
+  const { usuario, iniciarSesion, cerrarSesion, estaAutenticado } = useAuth();
   const [vista, setVista] = useState<Vista>('inicial');
-  const [vistaApp, setVistaApp] = useState<VistaApp>('ingresos');
+  const [vistaApp, setVistaApp] = useState<VistaApp>('dashboard');
   const [catsVersion, setCatsVersion] = useState(0);
 
   const agregarCategoria = async (nuevaCategoria: { nombre: string; tipo: string }) => {
@@ -82,54 +87,32 @@ function AppContent() {
         </>
       ) : (
         // Mostrar aplicación de gestión financiera (protegida)
-        <div className="w-full max-w-5xl">
-          {/* Barra de usuario con botones de navegación */}
-          <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Bienvenido,</p>
-                <p className="text-lg font-semibold text-gray-800">{usuario?.nombre}</p>
-                <p className="text-xs text-gray-500">{usuario?.correo}</p>
-              </div>
-              
-              {/* Botones de navegación */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setVistaApp('ingresos')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors ${
-                    vistaApp === 'ingresos'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  <Plus className="w-4 h-4" />
-                  Ingresos
-                </button>
-                <button
-                  onClick={() => setVistaApp('categoria')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors ${
-                    vistaApp === 'categoria'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  <Layers className="w-4 h-4" />
-                  Crear Categoría
-                </button>
-              </div>
-            </div>
-          </div>
+        <AppProvider key={catsVersion} userId={usuario?.id ?? ''}>
+          <div className="w-full max-w-6xl flex bg-gray-50">
+            <BarraLateral
+              vistaActual={vistaApp}
+              onCambiarVista={setVistaApp}
+              usuario={usuario ? { nombre: usuario.nombre, correo: usuario.correo } : null}
+              onCerrarSesion={cerrarSesion}
+            />
 
-          {/* Formulario activo */}
-          <div className="max-w-2xl mx-auto">
-            {vistaApp === 'ingresos' && usuario && (
-              <FormularioIngreso key={catsVersion} userId={usuario.id} />
-            )}
-            {vistaApp === 'categoria' && (
-              <FormularioCategoria onAgregarCategoria={agregarCategoria} />
-            )}
+            <main className="flex-1 p-6">
+              {vistaApp === 'dashboard' && <Dashboard />}
+              {vistaApp === 'nuevo-ingreso' && usuario && <FormularioIngreso userId={usuario.id} />}
+              {vistaApp === 'nuevo-gasto' && usuario && <FormularioGasto userId={usuario.id} />}
+              {vistaApp === 'consultar-ingresos' && <HistorialIngresos />}
+              {/* La UI existe, pero no hay item en la barra lateral aún */}
+              {vistaApp === 'categorias' && <GestionCategorias />}
+
+              {/* Compat: mantenemos la pantalla simple de crear categoría (por si la necesitan) */}
+              {vistaApp === 'categorias' && (
+                <div className="mt-6 max-w-2xl">
+                  <FormularioCategoria onAgregarCategoria={agregarCategoria} />
+                </div>
+              )}
+            </main>
           </div>
-        </div>
+        </AppProvider>
       )}
     </div>
   );

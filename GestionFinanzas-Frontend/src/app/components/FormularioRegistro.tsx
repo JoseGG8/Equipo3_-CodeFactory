@@ -2,12 +2,11 @@ import { useState } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, CheckCircle, XCircle, UserPlus, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import {
-  correoYaRegistrado,
-  registrarUsuario,
   validarContraseña,
   validarCorreo,
   REGLAS_CONTRASEÑA
 } from '../data/usuarios';
+import { registrarUsuarioApi } from '../services/api';
 
 interface FormularioRegistroProps {
   onRegistroExitoso: (usuario: { nombre: string; correo: string }) => void;
@@ -59,14 +58,6 @@ export function FormularioRegistro({ onRegistroExitoso, onVolverAtras }: Formula
       return;
     }
 
-    // Validación: correo no registrado previamente
-    if (correoYaRegistrado(correo)) {
-      toast.error('Correo ya registrado', {
-        description: 'Este correo electrónico ya está en uso. Por favor, utiliza otro.'
-      });
-      return;
-    }
-
     // Validación: contraseña
     if (!contraseñaValida) {
       toast.error('Contraseña inválida', {
@@ -83,31 +74,34 @@ export function FormularioRegistro({ onRegistroExitoso, onVolverAtras }: Formula
       return;
     }
 
-    // Registrar el usuario
-    const nuevoUsuario = registrarUsuario({
-      nombre: nombre.trim(),
-      correo: correo.trim().toLowerCase(),
-      contraseña
-    });
+    (async () => {
+      try {
+        const nuevoUsuario = await registrarUsuarioApi({
+          nombre: nombre.trim(),
+          email: correo.trim().toLowerCase(),
+          password: contraseña
+        });
 
-    // Notificar éxito
-    toast.success('¡Registro exitoso!', {
-      description: `Bienvenido ${nuevoUsuario.nombre}. Tu cuenta ha sido creada.`
-    });
+        toast.success('¡Registro exitoso!', {
+          description: `Bienvenido ${nuevoUsuario.nombre}. Tu cuenta ha sido creada.`
+        });
 
-    // Callback al componente padre
-    onRegistroExitoso({
-      nombre: nuevoUsuario.nombre,
-      correo: nuevoUsuario.correo
-    });
+        onRegistroExitoso({
+          nombre: nuevoUsuario.nombre,
+          correo: nuevoUsuario.email
+        });
 
-    // Limpiar formulario
-    setNombre('');
-    setCorreo('');
-    setContraseña('');
-    setConfirmarContraseña('');
-    setCorreoTocado(false);
-    setContraseñaTocada(false);
+        setNombre('');
+        setCorreo('');
+        setContraseña('');
+        setConfirmarContraseña('');
+        setCorreoTocado(false);
+        setContraseñaTocada(false);
+      } catch (err) {
+        const mensaje = err instanceof Error ? err.message : 'No se pudo registrar el usuario';
+        toast.error('Registro fallido', { description: mensaje });
+      }
+    })();
   };
 
   return (

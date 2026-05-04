@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { autenticarUsuario, obtenerIntentosRestantes, bloquearUsuario } from '../data/usuarios';
+import { loginUsuario } from '../services/api';
 
 interface FormularioLoginProps {
   onLoginExitoso: (usuario: { id: string; nombre: string; correo: string }) => void;
@@ -72,7 +72,7 @@ export function FormularioLogin({ onLoginExitoso, onVolverAtras }: FormularioLog
     return `${minutos}:${segs.toString().padStart(2, '0')}`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Verificar si está bloqueado
@@ -91,13 +91,11 @@ export function FormularioLogin({ onLoginExitoso, onVolverAtras }: FormularioLog
       return;
     }
 
-    // Intentar autenticar
-    const resultado = autenticarUsuario(correo.trim().toLowerCase(), contraseña);
-
-    if (resultado.exito && resultado.usuario) {
+    try {
+      const usuarioApi = await loginUsuario(correo.trim().toLowerCase(), contraseña);
       // Login exitoso
       toast.success('¡Bienvenido!', {
-        description: `Has iniciado sesión correctamente, ${resultado.usuario.nombre}`
+        description: `Has iniciado sesión correctamente, ${usuarioApi.nombre}`
       });
 
       // Limpiar intentos fallidos
@@ -107,11 +105,11 @@ export function FormularioLogin({ onLoginExitoso, onVolverAtras }: FormularioLog
 
       // Callback
       onLoginExitoso({
-        id: resultado.usuario.id,
-        nombre: resultado.usuario.nombre,
-        correo: resultado.usuario.correo
+        id: String(usuarioApi.id),
+        nombre: usuarioApi.nombre,
+        correo: usuarioApi.email
       });
-    } else {
+    } catch (err) {
       // Login fallido
       const nuevosIntentos = intentosFallidos + 1;
       setIntentosFallidos(nuevosIntentos);
@@ -129,8 +127,11 @@ export function FormularioLogin({ onLoginExitoso, onVolverAtras }: FormularioLog
         });
       } else {
         const intentosRestantes = 5 - nuevosIntentos;
+        const mensaje = err instanceof Error ? err.message : '';
         toast.error('Credenciales incorrectas', {
-          description: resultado.mensaje || `Correo o contraseña incorrectos. Te quedan ${intentosRestantes} intento${intentosRestantes === 1 ? '' : 's'}.`
+          description:
+            (mensaje ? `${mensaje}. ` : '') +
+            `Te quedan ${intentosRestantes} intento${intentosRestantes === 1 ? '' : 's'}.`
         });
       }
     }

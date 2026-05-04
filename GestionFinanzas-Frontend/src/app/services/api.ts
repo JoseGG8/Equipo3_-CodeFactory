@@ -31,6 +31,26 @@ export type CategoriaApi = {
   tipo: string;
 };
 
+export type TransactionTypeApi = 'INGRESO' | 'GASTO';
+
+export type TransaccionApi = {
+  id: number;
+  monto: number;
+  descripcion?: string | null;
+  fecha: string; // ISO
+  tipo: TransactionTypeApi;
+  usuario: { id: number };
+  categoria: { id: number };
+};
+
+export function toIsoStartOfDay(dateYmd: string): string {
+  return dateYmd.includes('T') ? dateYmd : `${dateYmd}T00:00:00`;
+}
+
+export function toIsoEndOfDay(dateYmd: string): string {
+  return dateYmd.includes('T') ? dateYmd : `${dateYmd}T23:59:59`;
+}
+
 export async function loginUsuario(email: string, password: string): Promise<UsuarioApi> {
   const body = new URLSearchParams({ email, password });
   const res = await fetch(apiUrl('/api/users/login'), {
@@ -95,15 +115,18 @@ export async function registrarIngresoApi(body: {
   fecha: string;
   descripcion: string;
 }): Promise<unknown> {
-  const res = await fetch(apiUrl('/api/transactions/income'), {
+  // El backend recibe una Transaction completa (usuario/categoria embebidos) en /api/transactions/register
+  const fechaIso = toIsoStartOfDay(body.fecha);
+  const res = await fetch(apiUrl('/api/transactions/register'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      userId: body.userId,
-      categoryId: body.categoryId,
       monto: body.monto,
-      fecha: body.fecha,
-      descripcion: body.descripcion || null
+      fecha: fechaIso,
+      descripcion: body.descripcion || null,
+      tipo: 'INGRESO',
+      usuario: { id: body.userId },
+      categoria: { id: body.categoryId }
     })
   });
   const text = await res.text();
@@ -111,4 +134,83 @@ export async function registrarIngresoApi(body: {
     throw new Error(text || 'No se pudo registrar el ingreso');
   }
   return text ? JSON.parse(text) : null;
+}
+
+export async function registrarGastoApi(body: {
+  userId: number;
+  categoryId: number;
+  monto: number;
+  fecha: string;
+  descripcion: string;
+}): Promise<unknown> {
+  const fechaIso = toIsoStartOfDay(body.fecha);
+  const res = await fetch(apiUrl('/api/transactions/register'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      monto: body.monto,
+      fecha: fechaIso,
+      descripcion: body.descripcion || null,
+      tipo: 'GASTO',
+      usuario: { id: body.userId },
+      categoria: { id: body.categoryId }
+    })
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(text || 'No se pudo registrar el gasto');
+  }
+  return text ? JSON.parse(text) : null;
+}
+
+export async function obtenerHistoricoTransaccionesApi(input: {
+  userId: number;
+  tipo?: TransactionTypeApi;
+  inicioYmd: string;
+  finYmd: string;
+}): Promise<TransaccionApi[]> {
+  const params = new URLSearchParams({
+    inicio: toIsoStartOfDay(input.inicioYmd),
+    fin: toIsoEndOfDay(input.finYmd),
+  });
+  if (input.tipo) params.set('tipo', input.tipo);
+
+  const res = await fetch(apiUrl(`/api/transactions/${input.userId}/transactions/history?${params.toString()}`));
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || 'No se pudo consultar el histórico');
+  return text ? (JSON.parse(text) as TransaccionApi[]) : [];
+}
+
+export async function obtenerBalanceApi(input: {
+  userId: number;
+  inicioYmd: string;
+  finYmd: string;
+}): Promise<number> {
+  const params = new URLSearchParams({
+    inicio: toIsoStartOfDay(input.inicioYmd),
+    fin: toIsoEndOfDay(input.finYmd),
+  });
+
+  const res = await fetch(apiUrl(`/api/transactions/user/${input.userId}/balance?${params.toString()}`));
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || 'No se pudo calcular el balance');
+  const n = Number(text);
+  return Number.isFinite(n) ? n : (JSON.parse(text) as number);
+}
+
+export async function obtenerTasaAhorroApi(input: {
+  userId: number;
+  inicioYmd: string;
+  finYmd: string;
+}): Promise<number> {
+  const params = new URLSearchParams({
+    inicio: toIsoStartOfDay(input.inicioYmd),
+    fin: toIsoEndOfDay(input.finYmd),
+  });
+
+  const res = await fetch(apiUrl(`/api/transactions/${input.userId}/transactions/ahorro?${params.toString()}`));
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || 'No se pudo calcular la tasa de ahorro');
+  const n = Number(text);
+  return Number.isFinite(n) ? n : (JSON.parse(text) as number);
 }

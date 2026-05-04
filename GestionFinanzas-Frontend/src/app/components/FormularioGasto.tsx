@@ -3,8 +3,9 @@ import { DollarSign, Calendar, Tag, FileText, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '../context/AppContext';
 import { formatearMoneda } from '../utils/formato';
+import { registrarGastoApi } from '../services/api';
 
-export function FormularioGasto() {
+export function FormularioGasto({ userId }: { userId: string }) {
   const { categoriasGasto, agregarGasto, balanceTotal } = useApp();
 
   const [monto, setMonto] = useState('');
@@ -12,7 +13,7 @@ export function FormularioGasto() {
   const [categoriaId, setCategoriaId] = useState('');
   const [descripcion, setDescripcion] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const montoNumerico = parseFloat(monto);
@@ -33,15 +34,28 @@ export function FormularioGasto() {
 
     const categoriaSeleccionada = categoriasGasto.find((c) => c.id === categoriaId);
 
-    // TODO: Reemplazar con llamada REST a Spring Boot
-    agregarGasto({
-      monto: montoNumerico,
-      fecha,
-      categoriaId,
-      categoriaNombre: categoriaSeleccionada?.nombre ?? categoriaId,
-      descripcion,
-      tipo: 'gasto',
-    });
+    try {
+      await registrarGastoApi({
+        userId: Number(userId),
+        categoryId: Number(categoriaId),
+        monto: montoNumerico,
+        fecha,
+        descripcion,
+      });
+
+      agregarGasto({
+        monto: montoNumerico,
+        fecha,
+        categoriaId,
+        categoriaNombre: categoriaSeleccionada?.nombre ?? categoriaId,
+        descripcion,
+        tipo: 'gasto',
+      });
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : 'No se pudo registrar el gasto';
+      toast.error('Error al registrar', { description: mensaje });
+      return;
+    }
 
     toast.success('Gasto registrado', {
       description: `Se registró un gasto de ${formatearMoneda(montoNumerico)} en "${categoriaSeleccionada?.nombre}"`,
