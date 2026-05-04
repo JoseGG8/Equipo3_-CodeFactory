@@ -61,10 +61,28 @@ public class TransactionServiceTests {
 
     @Test
     void registrarIngreso_valido_guardaTransaccionYActualizaBalance() throws Exception {
-        Transaction t = transactionService.registrarTransaccion(user.getId(), ingresoCategory.getId(), 1000.0, LocalDateTime.now(), "Sueldo mensual",TransactionType.INGRESO);
+
+        Transaction t = new Transaction();
+        Long userId = user.getId();
+        User usuario = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));;
+        t.setUsuario(usuario);
+        Long categoryId = ingresoCategory.getId();
+        Category categoria = categoryRepository.findById(categoryId).orElseThrow(() -> new RuntimeException("Categoria no encontrada"));
+        t.setCategoria(categoria);
+        Double monto = 1000.0;
+        t.setMonto(monto);
+        LocalDateTime fecha = LocalDateTime.now();
+        t.setFecha(fecha);
+        String descripcion = "Sueldo mensual";
+        t.setDescripcion(descripcion);
+        TransactionType tipo = TransactionType.INGRESO;
+        t.setTipo(tipo);
+
+
+        transactionService.registrarTransaccion(t);
 
         Assertions.assertNotNull(t.getId());
-        Assertions.assertEquals("INGRESO", t.getTipo());
+        Assertions.assertEquals(TransactionType.INGRESO, t.getTipo());
         Assertions.assertEquals(1000.0, t.getMonto());
         Assertions.assertEquals(user.getId(), t.getUsuario().getId());
         Assertions.assertEquals(ingresoCategory.getId(), t.getCategoria().getId());
@@ -78,7 +96,25 @@ public class TransactionServiceTests {
     @Test
     void registrarIngreso_montoCero_lanzaIllegalArgumentException() {
         IllegalArgumentException ex = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            transactionService.registrarTransaccion(user.getId(), ingresoCategory.getId(), 0.0, LocalDateTime.now(), "Cero",TransactionType.INGRESO);
+                    Transaction t = new Transaction();
+        Long userId = user.getId();
+        User usuario = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));;
+        t.setUsuario(usuario);
+        Long categoryId = ingresoCategory.getId();
+        Category categoria = categoryRepository.findById(categoryId).orElseThrow(() -> new RuntimeException("Categoria no encontrada"));
+        t.setCategoria(categoria);
+        Double monto = 0.0;
+        t.setMonto(monto);
+        LocalDateTime fecha = LocalDateTime.now();
+        t.setFecha(fecha);
+        String descripcion = "Sueldo mensual";
+        t.setDescripcion(descripcion);
+        TransactionType tipo = TransactionType.INGRESO;
+        t.setTipo(tipo);
+
+
+        transactionService.registrarTransaccion(t);
+
         });
         Assertions.assertTrue(ex.getMessage().contains("mayor a cero"));
     }
@@ -86,7 +122,23 @@ public class TransactionServiceTests {
     @Test
     void registrarIngreso_categoriaNoIngreso_lanzaIllegalArgumentException() {
         IllegalArgumentException ex = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            transactionService.registrarTransaccion(user.getId(), gastoCategory.getId(), 100.0, LocalDateTime.now(), "No ingreso", TransactionType.GASTO);
+                    Transaction t = new Transaction();
+        Long userId = user.getId();
+        User usuario = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));;
+        t.setUsuario(usuario);
+        Long categoryId = ingresoCategory.getId();
+        Category categoria = categoryRepository.findById(categoryId).orElseThrow(() -> new RuntimeException("Categoria no encontrada"));
+        t.setCategoria(categoria);
+        Double monto = 1000.0;
+        t.setMonto(monto);
+        LocalDateTime fecha = LocalDateTime.now();
+        t.setFecha(fecha);
+        String descripcion = "Sueldo mensual";
+        t.setDescripcion(descripcion);
+        TransactionType tipo = TransactionType.GASTO;
+        t.setTipo(tipo);
+
+            transactionService.registrarTransaccion(t);
         });
         Assertions.assertTrue(ex.getMessage().contains("categoría no corresponde a un ingreso"));
     }

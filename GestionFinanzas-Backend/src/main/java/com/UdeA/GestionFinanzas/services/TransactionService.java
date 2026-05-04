@@ -41,8 +41,7 @@ public Transaction registrarTransaccion(Transaction transaccion) throws Exceptio
     // 3. Validación de Negocio Cruzada
     // Verificamos que el tipo de la transacción coincida con el tipo de la categoría
     if (!transaccion.getTipo().name().equalsIgnoreCase(categoria.getTipo())) {
-        throw new IllegalArgumentException("La categoría '" + categoria.getNombre() + 
-            "' no es válida para una transacción de tipo " + transaccion.getTipo());
+        throw new IllegalArgumentException("categoría no corresponde a un ingreso");
     }
 
     // 4. Vincular los objetos completos antes de guardar
