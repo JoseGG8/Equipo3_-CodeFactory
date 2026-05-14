@@ -67,29 +67,5 @@ if (inicio.isAfter(fin)) {
     }
 }
 
-    // Lógica para balance
-public Double calcularBalanceTotalPeriodo(Long userId, LocalDateTime inicio, LocalDateTime fin) {
-    // 1. Obtenemos ingresos usando el método robusto que ya tienes
-    List<Transaction> ingresos = consultarHistoricoFiltrado(userId, TransactionType.INGRESO, inicio, fin);
-    
-    // 2. Obtenemos gastos
-    List<Transaction> gastos = consultarHistoricoFiltrado(userId, TransactionType.GASTO, inicio, fin);
-
-    // 3. Sumamos cada lista
-    Double totalIngresos = ingresos.stream().mapToDouble(Transaction::getMonto).sum();
-    Double totalGastos = gastos.stream().mapToDouble(Transaction::getMonto).sum();
-
-    // 4. Retornamos el resultado de la lógica de negocio
-    return totalIngresos - totalGastos;
-}
-public Double calcularTasaAhorro(Long userId, LocalDateTime inicio, LocalDateTime fin) {
-
-    List<Transaction> ingresos = consultarHistoricoFiltrado(userId, TransactionType.INGRESO, inicio, fin);
-    Double totalIngresos = ingresos.stream().mapToDouble(Transaction::getMonto).sum();
-    Double balance = calcularBalanceTotalPeriodo(userId, inicio, fin);
-    Double tasaAhorro = (balance/totalIngresos)*100;
-
-    return tasaAhorro;
-}
 
 }

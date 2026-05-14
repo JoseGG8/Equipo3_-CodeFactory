@@ -24,6 +24,9 @@ public class TransactionServiceTests {
     private TransactionService transactionService;
 
     @Autowired
+    private FinancialAnalysisService financialAnalysisService;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -62,7 +65,7 @@ public class TransactionServiceTests {
     @Test
     void registrarIngreso_valido_guardaTransaccionYActualizaBalance() throws Exception {
 
-        Transaction t = new Transaction();
+        Transaction t = new Ingreso();
         Long userId = user.getId();
         User usuario = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));;
         t.setUsuario(usuario);
@@ -90,13 +93,13 @@ public class TransactionServiceTests {
 
         List<Transaction> transacciones = transactionService.consultarHistoricoFiltrado(user.getId(),null , LocalDateTime.now().minusWeeks(1), LocalDateTime.now());
         Assertions.assertFalse(transacciones.isEmpty());
-        Assertions.assertEquals(1000.0, transactionService.calcularBalanceTotalPeriodo(user.getId() , LocalDateTime.now().minusWeeks(1), LocalDateTime.now()));
+        Assertions.assertEquals(1000.0, financialAnalysisService.calcularBalanceTotalPeriodo(user.getId() , LocalDateTime.now().minusWeeks(1), LocalDateTime.now()));
     }
 
     @Test
     void registrarIngreso_montoCero_lanzaIllegalArgumentException() {
         IllegalArgumentException ex = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-                    Transaction t = new Transaction();
+                    Transaction t = new Ingreso();
         Long userId = user.getId();
         User usuario = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));;
         t.setUsuario(usuario);
@@ -122,7 +125,7 @@ public class TransactionServiceTests {
     @Test
     void registrarIngreso_categoriaNoIngreso_lanzaIllegalArgumentException() {
         IllegalArgumentException ex = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-                    Transaction t = new Transaction();
+                    Transaction t = new Ingreso();
         Long userId = user.getId();
         User usuario = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));;
         t.setUsuario(usuario);

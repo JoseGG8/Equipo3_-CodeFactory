@@ -3,6 +3,7 @@ package com.UdeA.GestionFinanzas.controllers;
 import com.UdeA.GestionFinanzas.entities.Transaction;
 import com.UdeA.GestionFinanzas.entities.TransactionType;
 import com.UdeA.GestionFinanzas.services.TransactionService;
+import com.UdeA.GestionFinanzas.services.FinancialAnalysisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,9 @@ public class TransactionController {
 
     @Autowired
     private TransactionService transactionService;
+
+    @Autowired
+    private FinancialAnalysisService financialAnalysisService;
 
     public static class IngresoRequest {
         public Long userId;
@@ -50,7 +54,7 @@ public ResponseEntity<?> obtenerBalanceUsuario(
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin) {
     
     try {
-        Double balance = transactionService.calcularBalanceTotalPeriodo(userId, inicio, fin);
+        Double balance = financialAnalysisService.calcularBalanceTotalPeriodo(userId, inicio, fin);
         return ResponseEntity.ok(balance);
         
     } catch (IllegalArgumentException e) {
@@ -76,7 +80,7 @@ public ResponseEntity<?> obtenerBalanceUsuario(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin) {
         
-        return ResponseEntity.ok(transactionService.calcularTasaAhorro(userId, inicio, fin));
+        return ResponseEntity.ok(financialAnalysisService.calcularTasaAhorro(userId, inicio, fin));
     }
 
 }
