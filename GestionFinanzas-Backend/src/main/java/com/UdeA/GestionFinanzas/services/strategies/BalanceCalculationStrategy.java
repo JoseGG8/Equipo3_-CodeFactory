@@ -2,10 +2,12 @@ package com.UdeA.GestionFinanzas.services.strategies;
 
 import com.UdeA.GestionFinanzas.entities.Transaction;
 import com.UdeA.GestionFinanzas.services.TransactionService;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Component
 public class BalanceCalculationStrategy implements FinancialAnalysisStrategy {
 
     @Override
