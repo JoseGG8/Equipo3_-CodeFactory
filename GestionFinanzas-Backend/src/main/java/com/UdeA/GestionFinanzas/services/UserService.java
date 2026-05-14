@@ -30,4 +30,9 @@ public class UserService {
                 .filter(u -> u.getPassword().equals(password))
                 .orElseThrow(() -> new Exception("Credenciales incorrectas"));
     }
+
+    public User obtenerUsuarioPorId(Long id) throws Exception {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new Exception("Usuario no encontrado"));
+    }
 }
