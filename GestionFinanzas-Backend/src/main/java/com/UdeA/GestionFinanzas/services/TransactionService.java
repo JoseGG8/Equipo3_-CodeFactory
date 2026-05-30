@@ -19,6 +19,9 @@ public class TransactionService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private BudgetRepository budgetRepository;
+
 public Transaction registrarTransaccion(Transaction transaccion) throws Exception {
     
     // 1. Validaciones básicas de datos
@@ -47,6 +50,12 @@ public Transaction registrarTransaccion(Transaction transaccion) throws Exceptio
     // 4. Vincular los objetos completos antes de guardar
     transaccion.setUsuario(usuario);
     transaccion.setCategoria(categoria);
+
+    if (transaccion.getPresupuesto() != null && transaccion.getPresupuesto().getId() != null) {
+        Budget presupuesto = budgetRepository.findById(transaccion.getPresupuesto().getId())
+                .orElseThrow(() -> new Exception("Presupuesto no encontrado 📊"));
+        transaccion.setPresupuesto(presupuesto);
+    }
 
     // 5. Persistencia
     return transactionRepository.save(transaccion);

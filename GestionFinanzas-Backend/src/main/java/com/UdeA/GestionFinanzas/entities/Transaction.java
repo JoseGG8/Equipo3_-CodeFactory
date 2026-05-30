@@ -49,6 +49,10 @@ public abstract class Transaction {
     @JoinColumn(name = "category_id", nullable = false)
     private Category categoria;
 
+    @ManyToOne
+    @JoinColumn(name = "budget_id", nullable = true)
+    private Budget presupuesto;
+
     // Método polimórfico
     public abstract Double getImpactoFinanciero();
 }

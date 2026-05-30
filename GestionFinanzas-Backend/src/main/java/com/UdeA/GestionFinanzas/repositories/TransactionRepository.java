@@ -22,5 +22,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         LocalDateTime inicio,
         LocalDateTime fin
     );
+
+    List<Transaction> findByPresupuestoId(Long budgetId);
 }
 

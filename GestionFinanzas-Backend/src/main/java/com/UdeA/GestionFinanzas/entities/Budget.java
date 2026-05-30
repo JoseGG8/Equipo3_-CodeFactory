@@ -17,6 +17,9 @@ public class Budget {
     private Double montoTotal; // Requerido en HU11 [cite: 114]
 
     @Column(nullable = false)
+    private String nombre; // Ej: Alimentación, Transporte, etc.
+
+    @Column(nullable = false)
     private Integer mes; // Requerido en HU11 [cite: 114]
 
     @Column(nullable = false)
