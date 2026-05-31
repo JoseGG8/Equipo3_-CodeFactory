@@ -9,7 +9,7 @@ import {
 import { registrarUsuarioApi } from '../services/api';
 
 interface FormularioRegistroProps {
-  onRegistroExitoso: (usuario: { nombre: string; correo: string }) => void;
+  onRegistroExitoso: (usuario: { id: string; nombre: string; email: string; rol?: string }) => void;
   onVolverAtras: () => void;
 }
 
@@ -87,8 +87,10 @@ export function FormularioRegistro({ onRegistroExitoso, onVolverAtras }: Formula
         });
 
         onRegistroExitoso({
+          id: String(nuevoUsuario.id),
           nombre: nuevoUsuario.nombre,
-          correo: nuevoUsuario.email
+          email: nuevoUsuario.email,
+          rol: nuevoUsuario.rol
         });
 
         setNombre('');

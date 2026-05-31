@@ -214,3 +214,98 @@ export async function obtenerTasaAhorroApi(input: {
   const n = Number(text);
   return Number.isFinite(n) ? n : (JSON.parse(text) as number);
 }
+
+// -- DASHBOARD --
+
+export type DashboardSummaryApi = {
+  totalIngresos: number;
+  totalGastos: number;
+  balance: number;
+  transaccionesRecientes: TransaccionApi[];
+};
+
+export async function obtenerDashboardApi(input: {
+  userId: number;
+  inicioYmd: string;
+  finYmd: string;
+}): Promise<DashboardSummaryApi> {
+  const params = new URLSearchParams({
+    inicio: toIsoStartOfDay(input.inicioYmd),
+    fin: toIsoEndOfDay(input.finYmd),
+  });
+
+  const res = await fetch(apiUrl(`/api/dashboard/${input.userId}?${params.toString()}`));
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || 'No se pudo cargar el dashboard');
+  return JSON.parse(text) as DashboardSummaryApi;
+}
+
+// -- PRESUPUESTOS --
+
+export type PresupuestoApi = {
+  id: number;
+  montoTotal: number;
+  nombre: string;
+  mes: number;
+  año: number;
+  usuario: { id: number };
+};
+
+export type PresupuestoProgressApi = {
+  id: number;
+  nombre: string;
+  montoTotal: number;
+  gastado: number;
+  porcentaje: number;
+};
+
+export async function crearPresupuestoApi(body: {
+  montoTotal: number;
+  nombre: string;
+  mes: number;
+  año: number;
+  userId: number;
+}): Promise<PresupuestoApi> {
+  const res = await fetch(apiUrl('/api/budgets/register'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      montoTotal: body.montoTotal,
+      nombre: body.nombre,
+      mes: body.mes,
+      año: body.año,
+      usuario: { id: body.userId }
+    })
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || 'No se pudo crear el presupuesto');
+  return JSON.parse(text) as PresupuestoApi;
+}
+
+export async function obtenerPresupuestosProgressApi(userId: number): Promise<PresupuestoProgressApi[]> {
+  const res = await fetch(apiUrl(`/api/budgets/user/${userId}/progress`));
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || 'No se pudieron cargar los presupuestos');
+  return text ? (JSON.parse(text) as PresupuestoProgressApi[]) : [];
+}
+
+export async function editarPresupuestoApi(id: number, body: { montoTotal: number; nombre: string }): Promise<PresupuestoApi> {
+  const res = await fetch(apiUrl(`/api/budgets/${id}`), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || 'No se pudo actualizar el presupuesto');
+  return JSON.parse(text) as PresupuestoApi;
+}
+
+export async function eliminarPresupuestoApi(id: number): Promise<void> {
+  const res = await fetch(apiUrl(`/api/budgets/${id}`), {
+    method: 'DELETE'
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || 'No se pudo eliminar el presupuesto');
+  }
+}
