@@ -3,6 +3,12 @@ import { Categoria } from '../data/categorias';
 import { Transaccion } from '../data/transacciones';
 import { listarCategoriasApi, obtenerHistoricoTransaccionesApi } from '../services/api';
 
+export interface Presupuesto {
+  id: string;
+  monto: number;
+  mes: string; // YYYY-MM
+}
+
 interface AppContextType {
   categorias: Categoria[];
   transacciones: Transaccion[];
@@ -11,10 +17,12 @@ interface AppContextType {
   categoriasIngreso: Categoria[];
   categoriasGasto: Categoria[];
   balanceTotal: number;
+  presupuestos: Presupuesto[];
   agregarIngreso: (ingreso: Omit<Transaccion, 'id'>) => void;
   agregarGasto: (gasto: Omit<Transaccion, 'id'>) => void;
   agregarCategoria: (categoria: Omit<Categoria, 'id'>) => void;
   eliminarCategoria: (id: string) => void;
+  agregarPresupuesto: (presupuesto: Omit<Presupuesto, 'id'>) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -28,6 +36,7 @@ export function AppProvider({ children, userId }: AppProviderProps) {
   // Claves de localStorage con scope por usuario
   const claveTransacciones = `app_transacciones_${userId}`;
   const claveCategorias = `app_categorias_${userId}`;
+  const clavePresupuestos = `app_presupuestos_${userId}`;
 
   const [transacciones, setTransacciones] = useState<Transaccion[]>(() => {
     try {
@@ -42,6 +51,15 @@ export function AppProvider({ children, userId }: AppProviderProps) {
     try {
       const guardadas = localStorage.getItem(claveCategorias);
       return guardadas ? JSON.parse(guardadas) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [presupuestos, setPresupuestos] = useState<Presupuesto[]>(() => {
+    try {
+      const guardados = localStorage.getItem(clavePresupuestos);
+      return guardados ? JSON.parse(guardados) : [];
     } catch {
       return [];
     }
@@ -73,6 +91,8 @@ export function AppProvider({ children, userId }: AppProviderProps) {
     // Si el userId es inválido (p.ej. aún no restauró sesión), no consultamos backend.
     const idNum = Number(userId);
     if (!Number.isFinite(idNum) || idNum <= 0) return;
+    // Esperar a que las categorías estén cargadas antes de cargar transacciones
+    if (categorias.length === 0) return;
 
     let cancelado = false;
     (async () => {
@@ -87,12 +107,15 @@ export function AppProvider({ children, userId }: AppProviderProps) {
 
         const normalizadas: Transaccion[] = hist.map((t) => {
           const fechaYmd = String(t.fecha).slice(0, 10);
+          const catId = String(t.categoria?.id ?? '');
+          // Intentar encontrar el nombre de la categoría en las categorías cargadas
+          const catNombre = categorias.find(c => c.id === catId)?.nombre ?? catId;
           return {
             id: String(t.id),
             monto: t.monto,
             fecha: fechaYmd,
-            categoriaId: String(t.categoria?.id ?? ''),
-            categoriaNombre: String(t.categoria?.id ?? ''), // se mejora al mapear con categorías cargadas
+            categoriaId: catId,
+            categoriaNombre: catNombre,
             descripcion: t.descripcion ?? '',
             tipo: t.tipo === 'GASTO' ? 'gasto' : 'ingreso',
           };
@@ -108,7 +131,7 @@ export function AppProvider({ children, userId }: AppProviderProps) {
     return () => {
       cancelado = true;
     };
-  }, [claveTransacciones, userId]);
+  }, [claveTransacciones, userId, categorias]);
 
   const ingresos = transacciones.filter((t) => t.tipo === 'ingreso');
   const gastos = transacciones.filter((t) => t.tipo === 'gasto');
@@ -146,6 +169,15 @@ export function AppProvider({ children, userId }: AppProviderProps) {
     localStorage.setItem(claveCategorias, JSON.stringify(nuevas));
   };
 
+  const agregarPresupuesto = (presupuesto: Omit<Presupuesto, 'id'>) => {
+    // Si ya existe un presupuesto para ese mes, lo actualizamos. Si no, lo agregamos.
+    const existentes = presupuestos.filter(p => p.mes !== presupuesto.mes);
+    const nueva: Presupuesto = { ...presupuesto, id: `pres-${Date.now()}` };
+    const nuevas = [...existentes, nueva];
+    setPresupuestos(nuevas);
+    localStorage.setItem(clavePresupuestos, JSON.stringify(nuevas));
+  };
+
   const categoriasPorId = useMemo(() => {
     const m: Record<string, string> = {};
     categorias.forEach((c) => {
@@ -179,10 +211,12 @@ export function AppProvider({ children, userId }: AppProviderProps) {
       categoriasIngreso,
       categoriasGasto,
       balanceTotal,
+      presupuestos,
       agregarIngreso,
       agregarGasto,
       agregarCategoria,
       eliminarCategoria,
+      agregarPresupuesto,
     }),
     [
       categorias,
@@ -192,6 +226,7 @@ export function AppProvider({ children, userId }: AppProviderProps) {
       categoriasIngreso,
       categoriasGasto,
       balanceTotal,
+      presupuestos,
     ]
   );
 

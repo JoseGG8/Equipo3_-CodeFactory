@@ -5,15 +5,18 @@ export interface Usuario {
   correo: string;
   contraseña: string;
   fechaRegistro: string;
+  rol?: 'usuario' | 'admin';
 }
 
 const CLAVE_USUARIOS = 'app_usuarios_registrados';
 
-// Cargar usuarios desde localStorage (sin cuenta demo)
+// Cargar usuarios desde localStorage
 function cargarUsuarios(): Usuario[] {
   try {
     const guardados = localStorage.getItem(CLAVE_USUARIOS);
-    return guardados ? JSON.parse(guardados) : [];
+    const usuarios: Usuario[] = guardados ? JSON.parse(guardados) : [];
+    
+    return usuarios;
   } catch {
     return [];
   }
@@ -35,12 +38,13 @@ export function correoYaRegistrado(correo: string): boolean {
 }
 
 // Función para registrar un nuevo usuario
-export function registrarUsuario(usuario: Omit<Usuario, 'id' | 'fechaRegistro'>): Usuario {
+export function registrarUsuario(usuario: Omit<Usuario, 'id' | 'fechaRegistro' | 'rol'> & { rol?: 'usuario' | 'admin' }): Usuario {
   usuariosRegistrados = cargarUsuarios();
   const nuevoUsuario: Usuario = {
     ...usuario,
     id: Date.now().toString(),
-    fechaRegistro: new Date().toISOString().split('T')[0]
+    fechaRegistro: new Date().toISOString().split('T')[0],
+    rol: usuario.rol || 'usuario'
   };
 
   usuariosRegistrados.push(nuevoUsuario);
@@ -141,7 +145,8 @@ export function autenticarUsuario(correo: string, contraseña: string): Resultad
       nombre: usuario.nombre,
       correo: usuario.correo,
       contraseña: usuario.contraseña,
-      fechaRegistro: usuario.fechaRegistro
+      fechaRegistro: usuario.fechaRegistro,
+      rol: usuario.rol
     }
   };
 }

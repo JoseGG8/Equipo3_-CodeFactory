@@ -3,4 +3,9 @@ export type VistaApp =
   | 'nuevo-ingreso'
   | 'nuevo-gasto'
   | 'consultar-ingresos'
-  | 'categorias';
+  | 'categorias'
+  | 'perfil'
+  | 'admin-usuarios'
+  | 'historial-gastos'
+  | 'crear-presupuesto'
+  | 'reporte-gastos';

@@ -14,7 +14,10 @@ const OPCIONES_ORDEN: { valor: OrdenCriterio; etiqueta: string }[] = [
 
 function obtenerFiltroInicial() {
   const hoy = new Date();
-  return { desde: primerDiaMes(hoy), hasta: ultimoDiaMes(hoy) };
+  return {
+    desde: primerDiaMes(hoy),
+    hasta: ultimoDiaMes(hoy),
+  };
 }
 
 export function HistorialGastos() {
@@ -88,7 +91,7 @@ export function HistorialGastos() {
         <div>
           <p className="text-sm text-red-600 font-medium mb-1">Total de Gastos</p>
           <p className="text-3xl font-bold text-red-700">{formatearMoneda(totalFiltrado)}</p>
-          <p className="text-sm text-red-400 mt-1">
+          <p className="text-sm text-red-500 mt-1">
             {gastosFiltrados.length} gasto{gastosFiltrados.length !== 1 ? 's' : ''} registrado{gastosFiltrados.length !== 1 ? 's' : ''}
           </p>
         </div>

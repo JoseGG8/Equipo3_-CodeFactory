@@ -1,4 +1,4 @@
-import { LayoutDashboard, TrendingUp, TrendingDown, List, Tag, LogOut } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, TrendingDown, List, Tag, LogOut, User, Users, PieChart, Target, FileText } from 'lucide-react';
 import { VistaApp } from '../types';
 
 interface NavItem {
@@ -6,20 +6,27 @@ interface NavItem {
   label: string;
   Icon: React.ComponentType<{ className?: string }>;
   iconColor: string;
+  adminOnly?: boolean;
+  userOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'dashboard', label: 'Panel Principal', Icon: LayoutDashboard, iconColor: 'text-blue-600' },
-  { id: 'nuevo-ingreso', label: 'Registrar Ingreso', Icon: TrendingUp, iconColor: 'text-green-600' },
-  { id: 'nuevo-gasto', label: 'Registrar Gasto', Icon: TrendingDown, iconColor: 'text-red-600' },
-  { id: 'consultar-ingresos', label: 'Consultar Ingresos', Icon: List, iconColor: 'text-green-500' },
-  { id: 'categorias', label: 'Gestionar Categorías', Icon: Tag, iconColor: 'text-purple-600' },
+  { id: 'dashboard', label: 'Panel Principal', Icon: LayoutDashboard, iconColor: 'text-blue-600', userOnly: true },
+  { id: 'nuevo-ingreso', label: 'Registrar Ingreso', Icon: TrendingUp, iconColor: 'text-green-600', userOnly: true },
+  { id: 'nuevo-gasto', label: 'Registrar Gasto', Icon: TrendingDown, iconColor: 'text-red-600', userOnly: true },
+  { id: 'crear-presupuesto', label: 'Crear Presupuesto', Icon: Target, iconColor: 'text-blue-500', userOnly: true },
+  { id: 'consultar-ingresos', label: 'Historial Ingresos', Icon: List, iconColor: 'text-green-500', userOnly: true },
+  { id: 'historial-gastos', label: 'Historial Gastos', Icon: List, iconColor: 'text-red-500', userOnly: true },
+  { id: 'reporte-gastos', label: 'Reporte y Recomendaciones', Icon: PieChart, iconColor: 'text-orange-500', userOnly: true },
+  { id: 'categorias', label: 'Gestionar Categorías', Icon: Tag, iconColor: 'text-purple-600', userOnly: true },
+  { id: 'perfil', label: 'Mi Perfil', Icon: User, iconColor: 'text-indigo-600' },
+  { id: 'admin-usuarios', label: 'Usuarios', Icon: Users, iconColor: 'text-slate-600', adminOnly: true },
 ];
 
 interface BarraLateralProps {
   vistaActual: VistaApp;
   onCambiarVista: (vista: VistaApp) => void;
-  usuario: { nombre: string; correo: string } | null;
+  usuario: { nombre: string; correo: string; rol?: 'usuario' | 'admin' } | null;
   onCerrarSesion: () => void;
 }
 
@@ -45,7 +52,10 @@ export function BarraLateral({ vistaActual, onCambiarVista, usuario, onCerrarSes
 
       {/* Navegación */}
       <nav className="flex-1 py-3 px-2 space-y-0.5">
-        {NAV_ITEMS.map(({ id, label, Icon, iconColor }) => {
+        {NAV_ITEMS.map(({ id, label, Icon, iconColor, adminOnly, userOnly }) => {
+          if (adminOnly && usuario?.rol !== 'admin') return null;
+          if (userOnly && usuario?.rol === 'admin') return null;
+          
           const activo = vistaActual === id;
           return (
             <button

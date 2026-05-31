@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { loginUsuario } from '../services/api';
 
 interface FormularioLoginProps {
-  onLoginExitoso: (usuario: { id: string; nombre: string; correo: string }) => void;
+  onLoginExitoso: (usuario: { id: string; nombre: string; email: string; rol?: string }) => void;
   onVolverAtras: () => void;
 }
 
@@ -93,6 +93,7 @@ export function FormularioLogin({ onLoginExitoso, onVolverAtras }: FormularioLog
 
     try {
       const usuarioApi = await loginUsuario(correo.trim().toLowerCase(), contraseña);
+      
       // Login exitoso
       toast.success('¡Bienvenido!', {
         description: `Has iniciado sesión correctamente, ${usuarioApi.nombre}`
@@ -107,7 +108,8 @@ export function FormularioLogin({ onLoginExitoso, onVolverAtras }: FormularioLog
       onLoginExitoso({
         id: String(usuarioApi.id),
         nombre: usuarioApi.nombre,
-        correo: usuarioApi.email
+        email: usuarioApi.email,
+        rol: usuarioApi.rol
       });
     } catch (err) {
       // Login fallido
