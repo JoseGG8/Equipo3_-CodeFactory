@@ -24,5 +24,15 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
 
     List<Transaction> findByPresupuestoId(Long budgetId);
-}
 
+    @org.springframework.data.jpa.repository.Query("SELECT new com.UdeA.GestionFinanzas.dtos.CategorySumDTO(t.categoria.nombre, SUM(t.monto), MAX(t.monto)) " +
+           "FROM Transaction t " +
+           "WHERE t.usuario.id = :userId AND t.tipo = :tipo AND t.fecha >= :inicio AND t.fecha <= :fin " +
+           "GROUP BY t.categoria.nombre")
+    List<com.UdeA.GestionFinanzas.dtos.CategorySumDTO> sumExpensesByCategory(
+            @org.springframework.data.repository.query.Param("userId") Long userId,
+            @org.springframework.data.repository.query.Param("tipo") TransactionType tipo,
+            @org.springframework.data.repository.query.Param("inicio") LocalDateTime inicio,
+            @org.springframework.data.repository.query.Param("fin") LocalDateTime fin
+    );
+}
