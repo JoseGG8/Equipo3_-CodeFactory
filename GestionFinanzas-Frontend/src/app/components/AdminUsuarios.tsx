@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Users, Search, Shield, ShieldOff, MoreVertical } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { listarUsuariosApi, UsuarioApi } from '../services/api';
-import { Usuario } from '../data/usuarios';
+import { Usuario, obtenerUsuarios as obtenerUsuariosLocales } from '../data/usuarios';
 import { formatearFechaLarga } from '../utils/formato';
 
 export function AdminUsuarios() {
@@ -12,6 +12,7 @@ export function AdminUsuarios() {
   const [pagina, setPagina] = useState(1);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const itemsPorPagina = 5;
 
   useEffect(() => {
@@ -36,10 +37,24 @@ export function AdminUsuarios() {
 
       setCargando(true);
       setError(null);
+      setWarning(null);
 
       try {
         const pageResult = await listarUsuariosApi(adminId, 0, 100);
         const usuariosApi = pageResult.content || [];
+
+        if (usuariosApi.length === 0) {
+          const locales = obtenerUsuariosLocales();
+          if (locales.length > 0) {
+            setWarning(
+              'No se encontraron usuarios en el backend. Se muestran registros locales almacenados en el navegador.'
+            );
+            setUsuarios(locales);
+            setPagina(1);
+            return;
+          }
+        }
+
         setUsuarios(
           usuariosApi.map((u) => ({
             id: String(u.id),
@@ -104,6 +119,12 @@ export function AdminUsuarios() {
         <h1 className="text-2xl font-semibold text-gray-900">Gestión de Usuarios</h1>
         <p className="text-sm text-gray-500 mt-0.5">Administra los usuarios registrados en la plataforma</p>
       </div>
+
+      {warning && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          {warning}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
