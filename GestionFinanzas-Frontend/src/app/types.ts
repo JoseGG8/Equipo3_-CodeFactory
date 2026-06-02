@@ -1,5 +1,6 @@
 export type VistaApp =
   | 'dashboard'
+  | 'nuevo-transaccion'
   | 'nuevo-ingreso'
   | 'nuevo-gasto'
   | 'consultar-ingresos'

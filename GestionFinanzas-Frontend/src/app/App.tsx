@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AppProvider } from "./context/AppContext";
 import { PantallaInicial } from "./components/PantallaInicial";
+import { FormularioTransaccion } from "./components/FormularioTransaccion";
 import { FormularioRegistro } from "./components/FormularioRegistro";
 import { FormularioLogin } from "./components/FormularioLogin";
-import { FormularioIngreso } from "./components/FormularioIngreso";
-import { FormularioGasto } from "./components/FormularioGasto";
 import { FormularioCategoria } from "./components/FormularioCategoria";
 import { Dashboard } from "./components/Dashboard";
 import { HistorialIngresos } from "./components/HistorialIngresos";
@@ -166,11 +165,14 @@ function AppContent() {
               {vistaApp === "dashboard" && (
                 <Dashboard onCambiarVista={setVistaApp} />
               )}
+              {vistaApp === "nuevo-transaccion" && usuario && (
+                <FormularioTransaccion userId={usuario.id} />
+              )}
               {vistaApp === "nuevo-ingreso" && usuario && (
-                <FormularioIngreso userId={usuario.id} />
+                <FormularioTransaccion userId={usuario.id} />
               )}
               {vistaApp === "nuevo-gasto" && usuario && (
-                <FormularioGasto userId={usuario.id} />
+                <FormularioTransaccion userId={usuario.id} />
               )}
               {vistaApp === "consultar-ingresos" && (
                 <HistorialIngresos />

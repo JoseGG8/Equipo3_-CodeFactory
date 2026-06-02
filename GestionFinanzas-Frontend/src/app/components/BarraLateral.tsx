@@ -1,4 +1,4 @@
-import { LayoutDashboard, TrendingUp, TrendingDown, List, Tag, LogOut, User, Users, PieChart, Target, FileText } from 'lucide-react';
+import { LayoutDashboard, ListChecks, List, Tag, LogOut, User, Users, PieChart, Target, FileText } from 'lucide-react';
 import { VistaApp } from '../types';
 
 interface NavItem {
@@ -12,8 +12,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Panel Principal', Icon: LayoutDashboard, iconColor: 'text-blue-600', userOnly: true },
-  { id: 'nuevo-ingreso', label: 'Registrar Ingreso', Icon: TrendingUp, iconColor: 'text-green-600', userOnly: true },
-  { id: 'nuevo-gasto', label: 'Registrar Gasto', Icon: TrendingDown, iconColor: 'text-red-600', userOnly: true },
+  { id: 'nuevo-transaccion', label: 'Registrar Transacción', Icon: ListChecks, iconColor: 'text-green-600', userOnly: true },
   { id: 'crear-presupuesto', label: 'Crear Presupuesto', Icon: Target, iconColor: 'text-blue-500', userOnly: true },
   { id: 'consultar-ingresos', label: 'Historial Ingresos', Icon: List, iconColor: 'text-green-500', userOnly: true },
   { id: 'historial-gastos', label: 'Historial Gastos', Icon: List, iconColor: 'text-red-500', userOnly: true },

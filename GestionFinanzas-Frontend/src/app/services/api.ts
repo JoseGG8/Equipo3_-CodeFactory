@@ -110,6 +110,43 @@ export async function crearCategoriaApi(input: { nombre: string; tipo: string })
   return JSON.parse(text) as CategoriaApi;
 }
 
+export type RegistrarTransaccionApiBody = {
+  userId: number;
+  categoryId: number;
+  monto: number;
+  fecha: string;
+  descripcion: string;
+  tipo: TransactionTypeApi;
+  presupuestoId?: number;
+};
+
+export async function registrarTransaccionApi(body: RegistrarTransaccionApiBody): Promise<unknown> {
+  const fechaIso = toIsoStartOfDay(body.fecha);
+  const payload: Record<string, unknown> = {
+    monto: body.monto,
+    fecha: fechaIso,
+    descripcion: body.descripcion || null,
+    tipo: body.tipo,
+    usuario: { id: body.userId },
+    categoria: { id: body.categoryId },
+  };
+
+  if (body.presupuestoId !== undefined) {
+    payload.presupuesto = { id: body.presupuestoId };
+  }
+
+  const res = await fetch(apiUrl('/api/transactions/register'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(text || 'No se pudo registrar la transacción');
+  }
+  return text ? JSON.parse(text) : null;
+}
+
 export async function registrarIngresoApi(body: {
   userId: number;
   categoryId: number;
@@ -117,25 +154,10 @@ export async function registrarIngresoApi(body: {
   fecha: string;
   descripcion: string;
 }): Promise<unknown> {
-  // El backend recibe una Transaction completa (usuario/categoria embebidos) en /api/transactions/register
-  const fechaIso = toIsoStartOfDay(body.fecha);
-  const res = await fetch(apiUrl('/api/transactions/register'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      monto: body.monto,
-      fecha: fechaIso,
-      descripcion: body.descripcion || null,
-      tipo: 'INGRESO',
-      usuario: { id: body.userId },
-      categoria: { id: body.categoryId }
-    })
+  return registrarTransaccionApi({
+    ...body,
+    tipo: 'INGRESO',
   });
-  const text = await res.text();
-  if (!res.ok) {
-    throw new Error(text || 'No se pudo registrar el ingreso');
-  }
-  return text ? JSON.parse(text) : null;
 }
 
 export async function registrarGastoApi(body: {
@@ -145,24 +167,10 @@ export async function registrarGastoApi(body: {
   fecha: string;
   descripcion: string;
 }): Promise<unknown> {
-  const fechaIso = toIsoStartOfDay(body.fecha);
-  const res = await fetch(apiUrl('/api/transactions/register'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      monto: body.monto,
-      fecha: fechaIso,
-      descripcion: body.descripcion || null,
-      tipo: 'GASTO',
-      usuario: { id: body.userId },
-      categoria: { id: body.categoryId }
-    })
+  return registrarTransaccionApi({
+    ...body,
+    tipo: 'GASTO',
   });
-  const text = await res.text();
-  if (!res.ok) {
-    throw new Error(text || 'No se pudo registrar el gasto');
-  }
-  return text ? JSON.parse(text) : null;
 }
 
 export async function obtenerHistoricoTransaccionesApi(input: {

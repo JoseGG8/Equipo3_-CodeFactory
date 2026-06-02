@@ -6,6 +6,8 @@ export interface Transaccion {
   categoriaNombre: string;
   descripcion: string;
   tipo: 'ingreso' | 'gasto';
+  presupuestoId?: string;
+  presupuestoNombre?: string;
 }
 
 // Datos simulados — se reemplazarán por llamadas REST a Spring Boot
