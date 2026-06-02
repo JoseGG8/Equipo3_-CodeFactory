@@ -160,7 +160,7 @@ export function Dashboard({ onCambiarVista }: DashboardProps) {
       </div>
 
       {sinRegistros && !presupuestoActual ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-12 flex flex-col items-center justify-center text-center shadow-sm">
+          <div className="bg-white border border-gray-200 rounded-xl p-12 flex flex-col items-center justify-center text-center shadow-sm">
           <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
             <Inbox className="w-8 h-8 text-blue-500" />
           </div>
@@ -168,7 +168,7 @@ export function Dashboard({ onCambiarVista }: DashboardProps) {
           <p className="text-gray-500 mt-2 max-w-md">No tienes ingresos, gastos ni presupuesto en el período seleccionado. Comienza a registrar tus finanzas para ver el balance y progreso de tu presupuesto.</p>
           <div className="mt-6 flex gap-3">
             <button
-              onClick={() => onCambiarVista('crear-presupuesto')}
+              onClick={() => onCambiarVista('presupuestos')}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
             >
               Definir Presupuesto
@@ -223,35 +223,7 @@ export function Dashboard({ onCambiarVista }: DashboardProps) {
             </div>
           </div>
 
-          {/* Progreso del presupuesto */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <Target className="w-5 h-5 text-blue-600" />
-                Progreso del Presupuesto
-              </h2>
-              {!presupuestoActual && (
-                <button
-                  onClick={() => onCambiarVista('crear-presupuesto')}
-                  className="text-sm text-blue-600 font-medium hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg"
-                >
-                  Definir Presupuesto
-                </button>
-              )}
-            </div>
-
-            <div className="text-center py-6">
-              <p className="text-gray-500">
-                El progreso del presupuesto ahora se administra desde el panel "Presupuestos".
-              </p>
-              <button
-                onClick={() => onCambiarVista('presupuestos')}
-                className="mt-4 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-              >
-                Ir a Presupuestos
-              </button>
-            </div>
-          </div>
+          {/* Progreso del presupuesto eliminado: ahora gestionado en 'Presupuestos' */}
 
           {/* Actividad reciente */}
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
