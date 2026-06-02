@@ -83,6 +83,7 @@ public class UserControllerTest {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
+        @SuppressWarnings("unchecked")
         Page<User> returnedPage = (Page<User>) response.getBody();
         assertNotNull(returnedPage);
         

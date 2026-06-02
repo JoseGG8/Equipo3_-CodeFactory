@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 /** URL pública del API en Render; puedes sobrescribir con VITE_API_URL (p. ej. en Vercel). */
 const DEFAULT_API_BASE = 'https://equipo3-codefactory.onrender.com';
 
@@ -218,10 +220,10 @@ export async function obtenerTasaAhorroApi(input: {
 // -- DASHBOARD --
 
 export type DashboardSummaryApi = {
-  totalIngresos: number;
-  totalGastos: number;
-  balance: number;
-  transaccionesRecientes: TransaccionApi[];
+  nombreUsuario: string;
+  balanceTotal: number;
+  tasaAhorro: number;
+  ultimasTransacciones: TransaccionApi[];
 };
 
 export async function obtenerDashboardApi(input: {

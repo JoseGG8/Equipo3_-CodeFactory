@@ -84,11 +84,17 @@ export function Dashboard({ onCambiarVista }: DashboardProps) {
     return () => { cancelado = true; };
   }, [usuario, rango]);
 
-  const totalIngresos = resumen?.totalIngresos || 0;
-  const totalGastos = resumen?.totalGastos || 0;
-  const balance = resumen?.balance || 0;
+  const balance = resumen?.balanceTotal || 0;
   const esBalanceNegativo = balance < 0;
-  const actividadReciente = resumen?.transaccionesRecientes || [];
+  const actividadReciente = resumen?.ultimasTransacciones || [];
+
+  const totalIngresos = actividadReciente
+    .filter((t: any) => t.tipo === 'INGRESO')
+    .reduce((acc: number, t: any) => acc + t.monto, 0);
+
+  const totalGastos = actividadReciente
+    .filter((t: any) => t.tipo === 'GASTO')
+    .reduce((acc: number, t: any) => acc + t.monto, 0);
 
   const labelPeriodo: Record<Periodo, string> = {
     'este-mes': 'Este mes',
