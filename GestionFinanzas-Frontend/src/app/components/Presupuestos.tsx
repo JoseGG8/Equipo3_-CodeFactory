@@ -93,7 +93,13 @@ export function Presupuestos() {
   };
 
   const prepararEdicion = (presupuesto: PresupuestoProgressApi) => {
-    setEditandoId(presupuesto.id);
+    // Asegurarnos de que el id esté definido y sea numérico
+    const idNum = Number(presupuesto.id);
+    if (!Number.isFinite(idNum)) {
+      toast.error('ID de presupuesto inválido');
+      return;
+    }
+    setEditandoId(idNum);
     setEditNombre(presupuesto.nombre);
     setEditMonto(String(presupuesto.montoTotal));
     setError('');
@@ -109,7 +115,15 @@ export function Presupuestos() {
   const handleEditar = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (editandoId === null) return;
+    if (editandoId === null || editandoId === undefined) {
+      setError('ID de presupuesto inválido. Recarga la lista e intenta de nuevo.');
+      return;
+    }
+    const idNum = Number(editandoId);
+    if (!Number.isFinite(idNum)) {
+      setError('ID de presupuesto inválido.');
+      return;
+    }
 
     const montoNum = parseFloat(editMonto);
     if (isNaN(montoNum) || montoNum <= 0) {
@@ -123,7 +137,7 @@ export function Presupuestos() {
 
     setCargando(true);
     try {
-      await editarPresupuestoApi(editandoId, {
+      await editarPresupuestoApi(idNum, {
         montoTotal: montoNum,
         nombre: editNombre.trim(),
       });
