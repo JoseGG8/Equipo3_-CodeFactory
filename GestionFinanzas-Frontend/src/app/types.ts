@@ -8,5 +8,5 @@ export type VistaApp =
   | 'perfil'
   | 'admin-usuarios'
   | 'historial-gastos'
-  | 'crear-presupuesto'
+  | 'presupuestos'
   | 'reporte-gastos';

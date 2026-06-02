@@ -13,7 +13,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Panel Principal', Icon: LayoutDashboard, iconColor: 'text-blue-600', userOnly: true },
   { id: 'nuevo-transaccion', label: 'Registrar Transacción', Icon: ListChecks, iconColor: 'text-green-600', userOnly: true },
-  { id: 'crear-presupuesto', label: 'Crear Presupuesto', Icon: Target, iconColor: 'text-blue-500', userOnly: true },
+  { id: 'presupuestos', label: 'Presupuestos', Icon: Target, iconColor: 'text-blue-500', userOnly: true },
   { id: 'consultar-ingresos', label: 'Historial Ingresos', Icon: List, iconColor: 'text-green-500', userOnly: true },
   { id: 'historial-gastos', label: 'Historial Gastos', Icon: List, iconColor: 'text-red-500', userOnly: true },
   { id: 'reporte-gastos', label: 'Reporte y Recomendaciones', Icon: PieChart, iconColor: 'text-orange-500', userOnly: true },

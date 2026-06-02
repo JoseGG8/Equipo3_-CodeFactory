@@ -240,46 +240,17 @@ export function Dashboard({ onCambiarVista }: DashboardProps) {
               )}
             </div>
 
-            {presupuestoActual ? (
-              <div className="space-y-4">
-                <div className="flex justify-between items-end mb-1">
-                  <div>
-                    <p className="text-3xl font-bold text-gray-900">{formatearMoneda(totalGastoPresupuesto)}</p>
-                    <p className="text-sm text-gray-500 mt-1">Gastado de {formatearMoneda(presupuestoActual.montoTotal)}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-xl font-bold ${excedePresupuesto ? 'text-red-600' : 'text-green-600'}`}>
-                      {excedePresupuesto ? '-' + formatearMoneda(Math.abs(restante)) : formatearMoneda(restante)}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">{excedePresupuesto ? 'Excedente' : 'Restante'}</p>
-                  </div>
-                </div>
-
-                <div className="relative pt-2">
-                  <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden flex">
-                    <div 
-                      className={`h-full transition-all duration-500 ease-in-out ${excedePresupuesto ? 'bg-red-500' : porcentajeUso > 80 ? 'bg-orange-500' : 'bg-green-500'}`}
-                      style={{ width: `${Math.min(porcentajeUso, 100)}%` }}
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center text-sm font-medium">
-                  <span className={`${excedePresupuesto ? 'text-red-600' : porcentajeUso > 80 ? 'text-orange-600' : 'text-green-600'}`}>
-                    {porcentajeUso.toFixed(1)}% utilizado
-                  </span>
-                  {excedePresupuesto && (
-                    <span className="flex items-center gap-1 text-red-600">
-                      <AlertTriangle className="w-4 h-4" /> Has superado tu límite
-                    </span>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-6">
-                <p className="text-gray-500">Aún no has definido un presupuesto para el mes de {mesActual}.</p>
-              </div>
-            )}
+            <div className="text-center py-6">
+              <p className="text-gray-500">
+                El progreso del presupuesto ahora se administra desde el panel "Presupuestos".
+              </p>
+              <button
+                onClick={() => onCambiarVista('presupuestos')}
+                className="mt-4 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              >
+                Ir a Presupuestos
+              </button>
+            </div>
           </div>
 
           {/* Actividad reciente */}

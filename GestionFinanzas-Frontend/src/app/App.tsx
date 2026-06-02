@@ -13,7 +13,7 @@ import { BarraLateral } from "./components/BarraLateral";
 import { Perfil } from "./components/Perfil";
 import { AdminUsuarios } from "./components/AdminUsuarios";
 import { HistorialGastos } from "./components/HistorialGastos";
-import { FormularioPresupuesto } from "./components/FormularioPresupuesto";
+import { Presupuestos } from "./components/Presupuestos";
 import { ReporteGastos } from "./components/ReporteGastos";
 import { Toaster, toast } from "sonner";
 import { crearCategoriaApi } from "./services/api";
@@ -183,8 +183,8 @@ function AppContent() {
               {vistaApp === "reporte-gastos" && (
                 <ReporteGastos />
               )}
-              {vistaApp === "crear-presupuesto" && (
-                <FormularioPresupuesto />
+              {vistaApp === "presupuestos" && (
+                <Presupuestos />
               )}
               {vistaApp === "perfil" && <Perfil />}
               {vistaApp === "admin-usuarios" && (
