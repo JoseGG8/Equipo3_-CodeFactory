@@ -300,6 +300,9 @@ export async function obtenerPresupuestosProgressApi(userId: number): Promise<Pr
 }
 
 export async function editarPresupuestoApi(id: number, body: { montoTotal: number; nombre: string }): Promise<PresupuestoApi> {
+  if (id === undefined || id === null || !Number.isFinite(Number(id))) {
+    throw new Error('ID de presupuesto inválido');
+  }
   const res = await fetch(apiUrl(`/api/budgets/${id}`), {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
