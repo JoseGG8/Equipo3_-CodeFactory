@@ -27,6 +27,14 @@ export type UsuarioApi = {
   rol?: string;
 };
 
+export type UsuariosPageApi = {
+  content: UsuarioApi[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+};
+
 export type CategoriaApi = {
   id: number;
   nombre: string;
@@ -87,6 +95,21 @@ export async function registrarUsuarioApi(input: {
     throw new Error(text || 'No se pudo registrar el usuario');
   }
   return JSON.parse(text) as UsuarioApi;
+}
+
+export async function listarUsuariosApi(adminId: number, page = 0, size = 100): Promise<UsuariosPageApi> {
+  const params = new URLSearchParams({
+    adminId: String(adminId),
+    page: String(page),
+    size: String(size),
+  });
+
+  const res = await fetch(apiUrl(`/api/users?${params.toString()}`));
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(text || 'No se pudo cargar la lista de usuarios');
+  }
+  return JSON.parse(text) as UsuariosPageApi;
 }
 
 export async function listarCategoriasApi(): Promise<CategoriaApi[]> {

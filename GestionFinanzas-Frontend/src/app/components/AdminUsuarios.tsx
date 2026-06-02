@@ -1,17 +1,94 @@
 import { useState, useEffect } from 'react';
 import { Users, Search, Shield, ShieldOff, MoreVertical } from 'lucide-react';
-import { Usuario, obtenerUsuarios } from '../data/usuarios';
+import { useAuth } from '../context/AuthContext';
+import { listarUsuariosApi, UsuarioApi } from '../services/api';
+import { Usuario } from '../data/usuarios';
 import { formatearFechaLarga } from '../utils/formato';
 
 export function AdminUsuarios() {
+  const { usuario } = useAuth();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [busqueda, setBusqueda] = useState('');
   const [pagina, setPagina] = useState(1);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const itemsPorPagina = 5;
 
   useEffect(() => {
-    setUsuarios(obtenerUsuarios());
-  }, []);
+    const cargarUsuarios = async () => {
+      if (!usuario) {
+        setUsuarios([]);
+        return;
+      }
+
+      if (usuario.rol !== 'admin') {
+        setError('Acceso denegado: Solo los administradores pueden ver esta página.');
+        setUsuarios([]);
+        return;
+      }
+
+      const adminId = Number(usuario.id);
+      if (!Number.isFinite(adminId)) {
+        setError('ID de administrador inválido.');
+        setUsuarios([]);
+        return;
+      }
+
+      setCargando(true);
+      setError(null);
+
+      try {
+        const pageResult = await listarUsuariosApi(adminId, 0, 100);
+        const usuariosApi = pageResult.content || [];
+        setUsuarios(
+          usuariosApi.map((u) => ({
+            id: String(u.id),
+            nombre: u.nombre,
+            correo: u.email,
+            contraseña: '',
+            fechaRegistro: new Date().toISOString().split('T')[0],
+            rol: u.rol?.toLowerCase() === 'admin' ? 'admin' : 'usuario',
+          }))
+        );
+        setPagina(1);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'No se pudo cargar la lista de usuarios.');
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    cargarUsuarios();
+  }, [usuario]);
+
+  if (!usuario || usuario.rol !== 'admin') {
+    return (
+      <div className="max-w-3xl mx-auto rounded-3xl bg-white shadow-sm border border-red-100 p-8">
+        <div className="text-red-700 text-lg font-semibold mb-2">Acceso denegado</div>
+        <p className="text-sm text-gray-600">
+          Solo los administradores pueden acceder a este panel de gestión de usuarios.
+        </p>
+      </div>
+    );
+  }
+
+  if (cargando) {
+    return (
+      <div className="max-w-3xl mx-auto rounded-3xl bg-white shadow-sm border border-blue-100 p-8">
+        <div className="text-blue-700 text-lg font-semibold mb-2">Cargando usuarios...</div>
+        <p className="text-sm text-gray-600">Por favor espera mientras se carga la lista de usuarios.</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-3xl mx-auto rounded-3xl bg-white shadow-sm border border-amber-100 p-8">
+        <div className="text-amber-700 text-lg font-semibold mb-2">No se pudo cargar la lista</div>
+        <p className="text-sm text-gray-600">{error}</p>
+      </div>
+    );
+  }
 
   const filtrados = usuarios.filter((u) =>
     u.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -91,7 +168,7 @@ export function AdminUsuarios() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {formatearFechaLarga(u.fechaRegistro)}
+                        {u.fechaRegistro ? formatearFechaLarga(u.fechaRegistro) : 'Sin fecha'}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}`}>
