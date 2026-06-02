@@ -26,7 +26,7 @@ export function FormularioTransaccion({ userId }: { userId: string }) {
   }, [userId]);
 
   const categorias = tipo === 'ingreso' ? categoriasIngreso : categoriasGasto;
-  const presupuestoSeleccionado = presupuestos.find((p) => String(p.id) === presupuestoId);
+  const presupuestoSeleccionado = presupuestos.find((p) => String(p.id ?? p.budgetId) === presupuestoId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -220,11 +220,14 @@ export function FormularioTransaccion({ userId }: { userId: string }) {
                     ? 'No hay presupuestos disponibles'
                     : 'Selecciona un presupuesto'}
                 </option>
-                {presupuestos.map((pres) => (
-                  <option key={pres.id} value={pres.id}>
-                    {pres.nombre} - {formatearMoneda(pres.montoTotal)}
-                  </option>
-                ))}
+                {presupuestos.map((pres) => {
+                  const presupuestoIdValue = pres.id ?? pres.budgetId;
+                  return (
+                    <option key={presupuestoIdValue} value={presupuestoIdValue}>
+                      {pres.nombre} - {formatearMoneda(pres.montoTotal)}
+                    </option>
+                  );
+                })}
               </select>
               <p className="text-xs text-gray-500 mt-1">
                 Asigna este gasto a un presupuesto mensual cuando corresponda.
