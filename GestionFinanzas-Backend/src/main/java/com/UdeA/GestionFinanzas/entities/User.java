@@ -22,4 +22,7 @@ public class User {
     private String password; // Requerido en HU1 [cite: 29]
     
     private String rol; // Para diferenciar Usuario de Administrador [cite: 11, 15]
+
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean activo = true; // Estado de la cuenta para permitir desactivación
 }

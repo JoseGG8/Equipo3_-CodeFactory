@@ -22,6 +22,7 @@ public class UserService {
             throw new Exception("El correo electrónico ya está registrado.");
         }
         
+        user.setActivo(true);
         // Por ahora guardamos la contraseña así, luego le pondremos seguridad
         return userRepository.save(user);
     }
@@ -30,12 +31,24 @@ public class UserService {
     public User login(String email, String password) throws Exception {
         return userRepository.findByEmail(email)
                 .filter(u -> u.getPassword().equals(password))
+                .filter(User::isActivo)
                 .orElseThrow(() -> new Exception("Credenciales incorrectas"));
     }
 
     public User obtenerUsuarioPorId(Long id) throws Exception {
         return userRepository.findById(id)
                 .orElseThrow(() -> new Exception("Usuario no encontrado"));
+    }
+
+    public User desactivarUsuario(Long adminId, Long userId) throws Exception {
+        User admin = obtenerUsuarioPorId(adminId);
+        if (admin.getRol() == null || !"admin".equalsIgnoreCase(admin.getRol())) {
+            throw new Exception("Acceso denegado: Solo los administradores pueden gestionar usuarios.");
+        }
+
+        User usuario = obtenerUsuarioPorId(userId);
+        usuario.setActivo(false);
+        return userRepository.save(usuario);
     }
 
     public Page<User> listarUsuariosPaginados(Pageable pageable) {

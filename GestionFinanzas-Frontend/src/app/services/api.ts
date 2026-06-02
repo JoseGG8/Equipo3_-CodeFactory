@@ -25,6 +25,7 @@ export type UsuarioApi = {
   nombre: string;
   email: string;
   rol?: string;
+  activo?: boolean;
 };
 
 export type UsuariosPageApi = {
@@ -110,6 +111,19 @@ export async function listarUsuariosApi(adminId: number, page = 0, size = 100): 
     throw new Error(text || 'No se pudo cargar la lista de usuarios');
   }
   return JSON.parse(text) as UsuariosPageApi;
+}
+
+export async function desactivarUsuarioApi(adminId: number, userId: number): Promise<UsuarioApi> {
+  const params = new URLSearchParams({ adminId: String(adminId) });
+  const res = await fetch(apiUrl(`/api/users/${userId}/deactivate?${params.toString()}`), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(text || 'No se pudo desactivar el usuario');
+  }
+  return JSON.parse(text) as UsuarioApi;
 }
 
 export async function listarCategoriasApi(): Promise<CategoriaApi[]> {

@@ -6,6 +6,7 @@ export interface Usuario {
   contraseña: string;
   fechaRegistro: string;
   rol?: 'usuario' | 'admin';
+  activo?: boolean;
 }
 
 const CLAVE_USUARIOS = 'app_usuarios_registrados';

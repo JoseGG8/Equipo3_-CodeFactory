@@ -76,4 +76,20 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PutMapping("/{id}/deactivate")
+    public ResponseEntity<?> desactivarUsuario(
+            @PathVariable("id") Long userId,
+            @RequestParam Long adminId) {
+        try {
+            User desactivado = userService.desactivarUsuario(adminId, userId);
+            desactivado.setPassword(null);
+            return ResponseEntity.ok(desactivado);
+        } catch (Exception e) {
+            if (e.getMessage().contains("Acceso denegado")) {
+                return ResponseEntity.status(403).body(e.getMessage());
+            }
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

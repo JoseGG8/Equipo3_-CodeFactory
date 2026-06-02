@@ -41,6 +41,7 @@ public class UserControllerTest {
         admin.setEmail("admin@example.com");
         admin.setPassword("adminPass");
         admin.setRol("ADMIN");
+        admin.setActivo(true);
 
         normalUser = new User();
         normalUser.setId(2L);
@@ -48,6 +49,7 @@ public class UserControllerTest {
         normalUser.setEmail("user@example.com");
         normalUser.setPassword("userPass");
         normalUser.setRol("USUARIO");
+        normalUser.setActivo(true);
     }
 
     @Test
@@ -111,5 +113,23 @@ public class UserControllerTest {
         // Assert
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         assertEquals("Acceso denegado: Solo los administradores pueden gestionar usuarios.", response.getBody());
+    }
+
+    @Test
+    void testDesactivarUsuario_AsAdmin_Success() throws Exception {
+        // Arrange
+        normalUser.setActivo(false);
+        when(userService.desactivarUsuario(1L, 2L)).thenReturn(normalUser);
+
+        // Act
+        ResponseEntity<?> response = userController.desactivarUsuario(2L, 1L);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        User returnedUser = (User) response.getBody();
+        assertNotNull(returnedUser);
+        assertEquals(2L, returnedUser.getId());
+        assertFalse(returnedUser.isActivo());
+        assertNull(returnedUser.getPassword());
     }
 }

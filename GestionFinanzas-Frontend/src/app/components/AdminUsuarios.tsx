@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Users, Search, Shield, ShieldOff, MoreVertical } from 'lucide-react';
+import { Users, Search, Shield, ShieldOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { listarUsuariosApi, UsuarioApi } from '../services/api';
+import { desactivarUsuarioApi, listarUsuariosApi } from '../services/api';
 import { Usuario } from '../data/usuarios';
 import { formatearFechaLarga } from '../utils/formato';
 
@@ -48,6 +48,7 @@ export function AdminUsuarios() {
             contraseña: '',
             fechaRegistro: new Date().toISOString().split('T')[0],
             rol: u.rol?.toLowerCase() === 'admin' ? 'admin' : 'usuario',
+            activo: u.activo !== false,
           }))
         );
         setPagina(1);
@@ -98,6 +99,44 @@ export function AdminUsuarios() {
   const totalPaginas = Math.ceil(filtrados.length / itemsPorPagina);
   const paginados = filtrados.slice((pagina - 1) * itemsPorPagina, pagina * itemsPorPagina);
 
+  const handleDesactivarUsuario = async (usuarioToDeactivate: Usuario) => {
+    if (!usuarioToDeactivate || !usuarioToDeactivate.id || !usuario) {
+      return;
+    }
+
+    const confirmar = window.confirm(
+      `¿Estás seguro de que quieres desactivar la cuenta de ${usuarioToDeactivate.nombre}? Esta acción no se podrá deshacer.`
+    );
+    if (!confirmar) {
+      return;
+    }
+
+    const adminId = Number(usuario.id);
+    const userId = Number(usuarioToDeactivate.id);
+    if (!Number.isFinite(adminId) || !Number.isFinite(userId)) {
+      setError('ID de usuario inválido.');
+      return;
+    }
+
+    setCargando(true);
+    setError(null);
+
+    try {
+      const updated = await desactivarUsuarioApi(adminId, userId);
+      setUsuarios((prev) =>
+        prev.map((u) =>
+          u.id === String(updated.id)
+            ? { ...u, activo: updated.activo !== false }
+            : u
+        )
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo actualizar el estado de la cuenta.');
+    } finally {
+      setCargando(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -141,13 +180,14 @@ export function AdminUsuarios() {
                 <th className="px-6 py-3 font-medium">Usuario</th>
                 <th className="px-6 py-3 font-medium">Registro</th>
                 <th className="px-6 py-3 font-medium">Rol</th>
+                <th className="px-6 py-3 font-medium">Estado</th>
                 <th className="px-6 py-3 font-medium text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paginados.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500 text-sm">
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500 text-sm">
                     No se encontraron usuarios que coincidan con la búsqueda.
                   </td>
                 </tr>
@@ -176,9 +216,18 @@ export function AdminUsuarios() {
                           {isAdmin ? 'Admin' : 'Usuario'}
                         </span>
                       </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${u.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                          {u.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
-                          <MoreVertical className="w-4 h-4" />
+                        <button
+                          onClick={() => handleDesactivarUsuario(u)}
+                          disabled={!u.activo}
+                          className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${u.activo ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-gray-100 text-gray-500 cursor-not-allowed'}`}
+                        >
+                          {u.activo ? 'Desactivar' : 'Desactivado'}
                         </button>
                       </td>
                     </tr>
