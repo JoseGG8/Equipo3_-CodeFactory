@@ -239,13 +239,14 @@ export function Presupuestos() {
             <div className="space-y-4">
               {presupuestos.map((pres) => {
                 const porcentaje = Math.min(100, pres.porcentaje);
+                const gasto = pres.montoGastado ?? pres.gastado ?? 0;
                 return (
-                  <div key={pres.id} className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                  <div key={pres.id ?? pres.budgetId} className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm text-gray-500">{pres.nombre}</p>
                         <p className="text-xl font-semibold text-gray-900">{presupuestoAmountFormat(pres.montoTotal)}</p>
-                        <p className="text-xs text-gray-500 mt-1">Gastado: {presupuestoAmountFormat(pres.gastado)}</p>
+                        <p className="text-xs text-gray-500 mt-1">Gastado: {presupuestoAmountFormat(gasto)}</p>
                       </div>
                       <div className="flex items-start gap-2">
                         <button
@@ -257,7 +258,7 @@ export function Presupuestos() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleEliminar(pres.id)}
+                          onClick={() => handleEliminar(Number(pres.id ?? pres.budgetId))}
                           className="rounded-lg bg-white border border-red-200 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="inline h-3.5 w-3.5" /> Borrar

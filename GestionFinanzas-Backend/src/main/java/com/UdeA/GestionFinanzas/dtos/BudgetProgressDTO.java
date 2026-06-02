@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class BudgetProgressDTO {
-    private Long budgetId;
+    private Long id;
     private String nombre;
     private Double montoTotal;
     private Double montoGastado;
