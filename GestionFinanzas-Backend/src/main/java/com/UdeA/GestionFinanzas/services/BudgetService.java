@@ -110,7 +110,7 @@ public class BudgetService {
         }
 
         BudgetProgressDTO dto = new BudgetProgressDTO();
-        dto.setBudgetId(presupuesto.getId());
+        dto.setId(presupuesto.getId());
         dto.setNombre(presupuesto.getNombre());
         dto.setMontoTotal(presupuesto.getMontoTotal());
         dto.setMontoGastado(montoGastado);

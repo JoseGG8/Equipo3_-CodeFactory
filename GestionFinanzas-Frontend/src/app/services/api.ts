@@ -263,10 +263,12 @@ export type PresupuestoApi = {
 
 export type PresupuestoProgressApi = {
   id: number;
+  budgetId?: number;
   nombre: string;
   montoTotal: number;
-  gastado: number;
+  montoGastado: number;
   porcentaje: number;
+  gastado?: number;
 };
 
 export async function crearPresupuestoApi(body: {
